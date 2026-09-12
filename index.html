@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Akrep &amp; Yelkovan</title>
+<meta name="description" content="Cam efektli, canlı çalışan modern analog saat.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A0C12">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div class="aurora" aria-hidden="true">
+  <span class="blob blob--brass"></span>
+  <span class="blob blob--ice"></span>
+  <span class="blob blob--violet"></span>
+  <span class="grain"></span>
+</div>
+
+<main class="stage">
+  <section class="panel" aria-labelledby="baslik">
+    <h1 id="baslik" class="sr-only">Analog Saat</h1>
+
+    <header class="panel__meta">
+      <span class="zone">
+        <span class="zone__dot" aria-hidden="true"></span>
+        <span id="zoneName">—</span>
+      </span>
+      <span class="offset" id="zoneOffset">—</span>
+    </header>
+
+    <div class="dial-wrap">
+      <svg class="dial" id="dial" viewBox="0 0 400 400" role="img" aria-label="Analog saat kadranı">
+        <title id="dialTitle">Analog saat kadranı</title>
+        <defs>
+          <radialGradient id="faceGrad" cx="50%" cy="34%" r="78%">
+            <stop offset="0%"  stop-color="#1D2330"/>
+            <stop offset="58%" stop-color="#141924"/>
+            <stop offset="100%" stop-color="#0C1017"/>
+          </radialGradient>
+
+          <linearGradient id="rimGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="#FFFFFF" stop-opacity=".34"/>
+            <stop offset="38%"  stop-color="#FFFFFF" stop-opacity=".06"/>
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity=".16"/>
+          </linearGradient>
+
+          <linearGradient id="handGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="#FDFEFF"/>
+            <stop offset="100%" stop-color="#A8B4C8"/>
+          </linearGradient>
+
+          <linearGradient id="brassGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="#FFDC9A"/>
+            <stop offset="55%"  stop-color="#E8B44C"/>
+            <stop offset="100%" stop-color="#C08A2E"/>
+          </linearGradient>
+
+          <filter id="handShadow" x="-60%" y="-60%" width="220%" height="220%">
+            <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#000" flood-opacity=".55"/>
+          </filter>
+
+          <filter id="brassGlow" x="-80%" y="-80%" width="260%" height="260%">
+            <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#E8B44C" flood-opacity=".5"/>
+          </filter>
+        </defs>
+
+        <!-- kasa -->
+        <circle cx="200" cy="200" r="196" fill="none" stroke="url(#rimGrad)" stroke-width="1.25"/>
+        <circle cx="200" cy="200" r="188" fill="url(#faceGrad)"/>
+        <circle cx="200" cy="200" r="188" fill="none" stroke="#FFFFFF" stroke-opacity=".09" stroke-width="1"/>
+
+        <!-- saniye yayı -->
+        <circle class="arc-track" cx="200" cy="200" r="180" fill="none" stroke="#FFFFFF" stroke-opacity=".05" stroke-width="2"/>
+        <circle class="arc" id="secArc" cx="200" cy="200" r="180" fill="none"
+                stroke="url(#brassGrad)" stroke-width="2" stroke-linecap="round"
+                transform="rotate(-90 200 200)"/>
+
+        <g id="ticks"></g>
+        <g id="numerals"></g>
+
+        <!-- marka satırı -->
+        <text class="wordmark" x="200" y="128" text-anchor="middle">ZAMAN</text>
+        <text class="wordmark wordmark--sub" x="200" y="146" text-anchor="middle">OTOMATİK · YEREL</text>
+
+        <!-- ibreler -->
+        <g id="hourHand" class="hand" filter="url(#handShadow)">
+          <rect x="195.4" y="94" width="9.2" height="132" rx="4.6" fill="url(#handGrad)"/>
+        </g>
+
+        <g id="minuteHand" class="hand" filter="url(#handShadow)">
+          <rect x="197" y="50" width="6" height="184" rx="3" fill="url(#handGrad)"/>
+        </g>
+
+        <g id="secondHand" class="hand hand--second" filter="url(#brassGlow)">
+          <rect x="199.1" y="36" width="1.8" height="212" rx=".9" fill="url(#brassGrad)"/>
+          <circle cx="200" cy="240" r="8.5" fill="none" stroke="url(#brassGrad)" stroke-width="2.2"/>
+        </g>
+
+        <circle cx="200" cy="200" r="7.5" fill="#12161F" stroke="url(#brassGrad)" stroke-width="2"/>
+        <circle cx="200" cy="200" r="2.1" fill="#FFDC9A"/>
+      </svg>
+
+      <div class="crystal" id="crystal" aria-hidden="true"></div>
+      <div class="crystal-edge" aria-hidden="true"></div>
+    </div>
+
+    <div class="hairline" role="presentation"></div>
+
+    <div class="readout">
+      <p class="digital" id="digital" aria-live="off">
+        <span class="digital__u" id="dHH">00</span><span class="digital__sep">:</span><span class="digital__u" id="dMM">00</span><span class="digital__sep digital__sep--dim">:</span><span class="digital__u digital__u--sec" id="dSS">00</span>
+      </p>
+      <p class="date" id="date">—</p>
+    </div>
+
+    <footer class="dayline">
+      <div class="dayline__head">
+        <span class="label">Gün İlerlemesi</span>
+        <span class="value" id="dayPct">%0</span>
+      </div>
+      <div class="bar"><span class="bar__fill" id="dayBar"></span></div>
+    </footer>
+  </section>
+</main>
+
+<script src="assets/js/clock.js" defer></script>
+</body>
+</html>
