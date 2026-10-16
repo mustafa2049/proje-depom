@@ -149,6 +149,45 @@ describe('calculateNextReview — başarılı puanlar (Hard/Good/Easy)', () => {
     const good = calculateNextReview(snapshot, REVIEW_QUALITY.GOOD, NOW);
     expect(hard.interval).toBeLessThan(good.interval);
   });
+
+  it('Hard dizisi: 1 → 3 → 4 → 5 gün (1.2 çarpanı, en az +1 gün)', () => {
+    let state: SrsSnapshot = FRESH;
+    const intervals: number[] = [];
+
+    for (let i = 0; i < 4; i += 1) {
+      const result = calculateNextReview(state, REVIEW_QUALITY.HARD, NOW);
+      intervals.push(result.interval);
+      state = {
+        repetitions: result.repetitions,
+        easeFactor: result.easeFactor,
+        interval: result.interval,
+      };
+    }
+
+    // rep1 → 3; rep2: max(3+1, round(3*1.2)=4)=4; rep3: max(4+1, round(4*1.2)=5)=5
+    expect(intervals).toEqual([1, 3, 4, 5]);
+  });
+
+  it('Hard, 30 günlük aralığı 1.2 çarpanıyla 36 güne çıkarır (EF kullanmaz)', () => {
+    const result = calculateNextReview(
+      { repetitions: 4, easeFactor: 2.5, interval: 30 },
+      REVIEW_QUALITY.HARD,
+      NOW,
+    );
+    expect(result.interval).toBe(36);
+    // EF yine düşer (q=3 → -0.14), ama aralık EF'ye bağlı değildir
+    expect(result.easeFactor).toBeCloseTo(2.36, 10);
+  });
+
+  it('Hard, küçük aralıkta bile en az +1 gün artırır', () => {
+    // round(1 * 1.2) = 1, ama max(1 + 1, 1) = 2
+    const result = calculateNextReview(
+      { repetitions: 2, easeFactor: 2.5, interval: 1 },
+      REVIEW_QUALITY.HARD,
+      NOW,
+    );
+    expect(result.interval).toBe(2);
+  });
 });
 
 describe('calculateNextReview — doğrulama', () => {

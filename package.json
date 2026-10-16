@@ -16,6 +16,7 @@
     "api:test": "npm run test --workspace @proje-depom/api",
     "db:generate": "npm run prisma:generate --workspace @proje-depom/api",
     "db:migrate": "npm run prisma:migrate --workspace @proje-depom/api",
-    "db:seed": "npm run db:seed --workspace @proje-depom/api"
+    "db:seed": "npm run db:seed --workspace @proje-depom/api",
+    "api:dev": "npm run dev --workspace @proje-depom/api"
   }
 }

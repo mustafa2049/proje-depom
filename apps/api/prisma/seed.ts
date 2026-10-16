@@ -1,6 +1,8 @@
 import { CEFRLevel } from '@prisma/client';
 
-import { prisma } from '../src/lib/prisma';
+import { getPrisma } from '../src/lib/prisma';
+
+const prisma = getPrisma();
 
 interface SeedCard {
   slug: string;

@@ -86,6 +86,7 @@ model UserCardSRS {
   repetitions    Int        @default(0)    // Başarılı tekrar sayısı
   nextReviewDate DateTime   @default(now())
   lastReviewedAt DateTime?
+  firstReviewedAt DateTime?              // Kartın ilk kez çalışıldığı an (günlük yeni kart kotası için)
 
   @@unique([userId, cardId])
   @@index([userId, nextReviewDate])
@@ -125,6 +126,8 @@ model AIChatMessage {
   correctedContent   String?       // AI tarafından düzeltilmiş hali
   grammarExplanation String?       // Hatanın Türkçe açıklaması
   nativeAlternative  String?       // Daha doğal (native) alternatif
+  replyTranslationTR String?       // AI yanıtının Türkçe çevirisi (yalnızca AI satırlarında)
+  extractedVocabulary Json?        // AI yanıtından çıkarılan kelime/kalıp listesi (yalnızca AI satırlarında)
   createdAt          DateTime      @default(now())
 
   @@index([sessionId, createdAt])

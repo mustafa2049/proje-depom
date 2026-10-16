@@ -41,6 +41,9 @@ export const AGAIN_RETRY_MINUTES = 10;
 /** SM-2 ölçeğinde bu eşiğin altı "başarısız" sayılır. */
 const PASS_THRESHOLD = 3;
 
+/** Hard için Anki standardı çarpanı (EF yerine sabit). */
+export const HARD_INTERVAL_MULTIPLIER = 1.2;
+
 const SM2_SCALE: Record<ReviewQuality, Sm2Quality> = {
   [REVIEW_QUALITY.AGAIN]: 1,
   [REVIEW_QUALITY.HARD]: 3,
@@ -92,15 +95,45 @@ export function addDaysFromStartOfUtcDay(now: Date, days: number): Date {
 }
 
 /**
+ * Hard aralığı (Anki standardı):
+ *  - repetitions 0 → 1 gün, repetitions 1 → 3 gün
+ *  - aksi halde max(interval + 1, round(interval * 1.2)) — EF kullanılmaz.
+ */
+function nextHardInterval(current: SrsSnapshot): number {
+  if (current.repetitions === 0) {
+    return 1;
+  }
+  if (current.repetitions === 1) {
+    return 3;
+  }
+  return Math.max(current.interval + 1, Math.round(current.interval * HARD_INTERVAL_MULTIPLIER));
+}
+
+/**
+ * Good/Easy aralığı (SM-2):
+ *  - repetitions 0 → 1 gün, repetitions 1 → 6 gün
+ *  - aksi halde round(interval * EF').
+ */
+function nextStandardInterval(current: SrsSnapshot, easeFactor: number): number {
+  if (current.repetitions === 0) {
+    return 1;
+  }
+  if (current.repetitions === 1) {
+    return 6;
+  }
+  return Math.round(current.interval * easeFactor);
+}
+
+/**
  * Bir kartın değerlendirilmesinden sonraki durumunu hesaplar.
  *
  * Kurallar:
  *  - Başarısız (Again): repetitions = 0, interval = 1, status = RELEARNING,
  *    tekrar aynı gün 10 dakika sonra sorulur.
- *  - Başarılı (Hard/Good/Easy):
- *      repetitions 0 → interval 1, repetitions 1 → interval 6,
- *      aksi halde interval = round(interval * EF'), repetitions += 1, status = REVIEW.
- *  - EF, interval hesabından ÖNCE güncellenir (SM-2 orijinal sıralaması).
+ *  - Başarılı (Hard/Good/Easy): repetitions += 1, status = REVIEW.
+ *      Hard: nextHardInterval (1 → 3 → max(interval + 1, round(interval * 1.2)))
+ *      Good/Easy: nextStandardInterval (1 → 6 → round(interval * EF'))
+ *  - EF her puanda güncellenir ve interval hesabından ÖNCE hesaplanır (SM-2 sıralaması).
  *  - nextReviewDate = bugünün (UTC) başlangıcı + interval gün.
  */
 export function calculateNextReview(
@@ -124,14 +157,10 @@ export function calculateNextReview(
     };
   }
 
-  let interval: number;
-  if (current.repetitions === 0) {
-    interval = 1;
-  } else if (current.repetitions === 1) {
-    interval = 6;
-  } else {
-    interval = Math.round(current.interval * easeFactor);
-  }
+  const interval =
+    quality === REVIEW_QUALITY.HARD
+      ? nextHardInterval(current)
+      : nextStandardInterval(current, easeFactor);
 
   return {
     repetitions: current.repetitions + 1,
