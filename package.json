@@ -1,0 +1,21 @@
+{
+  "name": "proje-depom",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Uçtan uca İngilizce çalışma platformu (SRS, AI konuşma pratiği, okuyucu, analitik)",
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down",
+    "api:typecheck": "npm run typecheck --workspace @proje-depom/api",
+    "api:test": "npm run test --workspace @proje-depom/api",
+    "db:generate": "npm run prisma:generate --workspace @proje-depom/api",
+    "db:migrate": "npm run prisma:migrate --workspace @proje-depom/api",
+    "db:seed": "npm run db:seed --workspace @proje-depom/api"
+  }
+}

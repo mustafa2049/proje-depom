@@ -1,0 +1,25 @@
+# Bağımlılıklar
+node_modules/
+
+# Derleme çıktıları
+dist/
+build/
+.expo/
+
+# Ortam değişkenleri ve gizli dosyalar
+.env
+.env.*
+!.env.example
+
+# Test & kapsam raporları
+coverage/
+
+# Loglar
+*.log
+npm-debug.log*
+
+# Editör / OS
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
