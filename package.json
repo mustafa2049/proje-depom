@@ -4,7 +4,8 @@
   "private": true,
   "description": "Uçtan uca İngilizce çalışma platformu (SRS, AI konuşma pratiği, okuyucu, analitik)",
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "engines": {
     "node": ">=20.11.0"
@@ -17,6 +18,17 @@
     "db:generate": "npm run prisma:generate --workspace @proje-depom/api",
     "db:migrate": "npm run prisma:migrate --workspace @proje-depom/api",
     "db:seed": "npm run db:seed --workspace @proje-depom/api",
-    "api:dev": "npm run dev --workspace @proje-depom/api"
+    "api:dev": "npm run dev --workspace @proje-depom/api",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "mobile:start": "npm run start --workspace @proje-depom/mobile-web",
+    "mobile:web": "npm run web --workspace @proje-depom/mobile-web",
+    "mobile:export": "npm run export:web --workspace @proje-depom/mobile-web",
+    "mobile:test": "npm run test --workspace @proje-depom/mobile-web"
+  },
+  "devDependencies": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5"
   }
 }

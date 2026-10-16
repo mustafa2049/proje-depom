@@ -397,6 +397,43 @@ describe.skipIf(!TEST_DATABASE_URL)('Phase 2 API (entegrasyon)', () => {
       expect(res.json().summary).toMatchObject({ newIntroducedToday: 2, newRemainingToday: 0 });
       expect(res.json().items.filter((item: { isNew: boolean }) => item.isNew)).toHaveLength(0);
     });
+    it('reviewedAt geçmiş bir zamanı kullanır (çevrimdışı tekrar), aşırı eski değeri reddeder', async () => {
+      const user = await registerUser();
+      const cardId = SYSTEM_CARD_IDS[0] as string;
+      const reviewedAt = new Date(Date.now() - 2 * DAY_MS).toISOString();
+
+      const ok = await app.inject({
+        method: 'POST',
+        url: '/api/srs/review',
+        headers: authHeader(user),
+        payload: { cardId, quality: 2, reviewedAt },
+      });
+      expect(ok.statusCode).toBe(200);
+
+      const record = await db.userCardSRS.findFirst({ where: { userId: user.id, cardId } });
+      expect(record?.lastReviewedAt?.toISOString()).toBe(reviewedAt);
+      // Aralık 1 gün ve gerçek yapılma gününden hesaplanır: yarın değil, 1 gün sonrası (2 gün önceki + 1 → dün)
+      expect(record?.nextReviewDate.getTime()).toBeLessThan(Date.now());
+
+      const tooOld = await app.inject({
+        method: 'POST',
+        url: '/api/srs/review',
+        headers: authHeader(user),
+        payload: { cardId: SYSTEM_CARD_IDS[1], quality: 2, reviewedAt: new Date(Date.now() - 30 * DAY_MS).toISOString() },
+      });
+      expect(tooOld.statusCode).toBe(400);
+    });
+
+    it('kayıtta günlük hedef kart sayısı seçilebilir', async () => {
+      const email = `goal-${crypto.randomUUID()}@test.dev`;
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/auth/register',
+        payload: { email, password: PASSWORD, name: 'Goal', currentLevel: 'B2', dailyGoalCards: 50 },
+      });
+      expect(res.statusCode).toBe(201);
+      expect(res.json().user).toMatchObject({ currentLevel: 'B2', dailyGoalCards: 50 });
+    });
   });
 
   describe('seri (streak) kuralları', () => {

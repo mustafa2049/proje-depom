@@ -16,6 +16,7 @@ const registerBody = z.object({
   password: z.string().min(8, 'Şifre en az 8 karakter olmalı').max(128),
   name: z.string().trim().min(1).max(100),
   currentLevel: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']).default('A2'),
+  dailyGoalCards: z.coerce.number().int().min(1).max(200).default(30),
 });
 
 const loginBody = z.object({

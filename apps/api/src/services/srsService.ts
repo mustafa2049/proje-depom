@@ -4,23 +4,14 @@ import { addUtcDays, startOfUtcDay, utcDateKey, utcDayBounds } from '../lib/date
 import { ConflictError, NotFoundError } from '../lib/errors';
 import {
   calculateNextReview,
+  CORRECT_THRESHOLD,
   DEFAULT_EASE_FACTOR,
   REVIEW_QUALITY,
+  XP_BY_QUALITY,
   type ReviewQuality,
-} from '../utils/srsAlgorithm';
+} from '@proje-depom/shared';
 
 import { buildCardWhere, toCardView, type CardView, type SrsProgressView } from './deckService';
-
-/** Değerlendirmeye göre kazanılan XP. */
-export const XP_BY_QUALITY: Record<ReviewQuality, number> = {
-  [REVIEW_QUALITY.AGAIN]: 1,
-  [REVIEW_QUALITY.HARD]: 5,
-  [REVIEW_QUALITY.GOOD]: 10,
-  [REVIEW_QUALITY.EASY]: 12,
-};
-
-/** Bir değerlendirmeyi "doğru" saymak için en düşük puan (Good ve üstü). */
-const CORRECT_THRESHOLD: ReviewQuality = REVIEW_QUALITY.GOOD;
 
 export interface StudyQueueOptions {
   limit: number;
@@ -128,6 +119,8 @@ export interface ReviewInput {
   cardId: string;
   quality: ReviewQuality;
   durationMs: number;
+  /** Çevrimdışı değerlendirmelerde gerçek yapılma zamanı; verilmezse sunucu zamanı kullanılır. */
+  reviewedAt?: Date | undefined;
 }
 
 export interface ReviewResult {
@@ -156,8 +149,9 @@ export async function reviewCard(
   db: PrismaClient,
   userId: string,
   input: ReviewInput,
-  now: Date = new Date(),
+  serverNow: Date = new Date(),
 ): Promise<ReviewResult> {
+  const now = input.reviewedAt ?? serverNow;
   try {
     return await db.$transaction(async (tx) => {
       const card = await tx.card.findFirst({

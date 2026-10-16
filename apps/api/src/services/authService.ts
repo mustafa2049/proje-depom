@@ -37,6 +37,7 @@ export interface RegisterInput {
   password: string;
   name: string;
   currentLevel: CEFRLevel;
+  dailyGoalCards: number;
 }
 
 export interface AuthContext {
@@ -71,6 +72,7 @@ export async function registerUser(ctx: AuthContext, input: RegisterInput): Prom
         passwordHash,
         name: input.name,
         currentLevel: input.currentLevel,
+        dailyGoalCards: input.dailyGoalCards,
       },
     });
   } catch (error) {
