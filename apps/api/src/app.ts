@@ -10,6 +10,8 @@ import { createTokenService } from './lib/tokens';
 import { GLOBAL_RATE_LIMIT, rateLimitKey } from './middlewares/rateLimiter';
 import { authRoutes } from './routes/authRoutes';
 import { aiRoutes } from './routes/aiRoutes';
+import { practiceRoutes } from './routes/practiceRoutes';
+import { readerRoutes } from './routes/readerRoutes';
 import { cardRoutes, deckRoutes } from './routes/deckRoutes';
 import { srsRoutes } from './routes/srsRoutes';
 import { statsRoutes } from './routes/statsRoutes';
@@ -69,6 +71,8 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   await app.register(srsRoutes(ctx), { prefix: '/api/srs' });
   await app.register(aiRoutes(ctx), { prefix: '/api/ai' });
   await app.register(statsRoutes(ctx), { prefix: '/api/stats' });
+  await app.register(readerRoutes(ctx), { prefix: '/api/reader' });
+  await app.register(practiceRoutes(ctx), { prefix: '/api/practice' });
 
   return app;
 }

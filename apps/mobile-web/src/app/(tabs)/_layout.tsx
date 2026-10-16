@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { House } from 'lucide-react-native';
+import { Bot, BookOpen, House, Puzzle } from 'lucide-react-native';
 
 export default function TabsLayout() {
   return (
@@ -16,6 +16,27 @@ export default function TabsLayout() {
         options={{
           title: 'Ana Sayfa',
           tabBarIcon: ({ color, size }) => <House color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="practice"
+        options={{
+          title: 'Pratik',
+          tabBarIcon: ({ color, size }) => <Puzzle color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="ai-tutor"
+        options={{
+          title: 'AI Tutor',
+          tabBarIcon: ({ color, size }) => <Bot color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="reader"
+        options={{
+          title: 'Okuma',
+          tabBarIcon: ({ color, size }) => <BookOpen color={color} size={size} />,
         }}
       />
       {/* Odak modu: çalışma ekranında alt navigasyon gizlenir; ekran yalnızca yönlendirmeyle açılır. */}

@@ -34,6 +34,10 @@ Base URL: `http://localhost:3000` · Korumalı uçlar `Authorization: Bearer <ac
 | GET | `/api/ai/sessions` | Sohbet oturumları |
 | GET | `/api/ai/sessions/:id` | Oturum ve mesajları |
 | GET | `/api/stats/overview` | Seri, öğrenilen kart, doğruluk oranı, 30 günlük ısı haritası, toplam XP |
+| GET | `/api/reader/passages` | Okuma parçaları (özet), `?level=A1…C2` filtresi |
+| GET | `/api/reader/passages/:id` | Parça: içerik, anahtar kelimeler, 3 okuduğunu anlama sorusu |
+| POST | `/api/reader/lookup` | `{ word, contextSentence }` — önce kartlarda arar (DECK), yoksa bağlamsal AI çözümü (AI) |
+| GET | `/api/practice/exercises` | `?level&count` — kelime sıralama, boşluk doldurma (kullanıcı kartlarından dahil) ve çeviri soruları |
 
 Hatalar: `{ "error": { "code", "message", "details?" } }` biçimindedir (400/401/403/404/409/429/502).
 
@@ -101,6 +105,14 @@ npm run mobile:test          # API istemcisi, study store ve yardımcılar
 npm run test                 # tüm workspace'ler (API, paylaşılan paket, mobil)
 npm run typecheck            # tüm workspace'ler
 ```
+
+## Faz 4: AI Tutor, Pratik ve Okuma
+
+- **AI Tutor** (`ai-tutor`): senaryo seçici (5 senaryo), geçmiş oturumlar, sohbet balonları, her kullanıcı mesajının altında gramer geri bildirimi (kusursuz rozeti, düzeltme, Türkçe açıklama, doğal alternatif), AI yanıtında çeviri gösterme ve sesli dinleme, çıkarılan kelimeleri tek dokunuşla desteye ekleme. Web'de sesli giriş (Web Speech API) destekler.
+- **Pratik** (`practice`): seviye seçimi, üç modlu set. Kelime sıralama (karışık kelimeleri dizme, geri alma), boşluk doldurma (4 şık, anlık geri bildirim), çeviri lab'ı (TR→EN, `analyze-sentence` ile skor ve düzeltme).
+- **Okuma** (`reader`): seviye filtreli kütüphane, tıklanabilir metin, tüm metni sesli okuma, kelime sayfası (anlam, IPA, tanım, SRS'ye ekleme; yinelenen eklemeyi engeller), okuduğunu anlama soruları.
+
+Okuma parçaları ve alıştırma havuzu `apps/api/src/content/` altında statik olarak tutulur (7 parça, 8 kelime sıralama, 8 boşluk doldurma, 6 çeviri sorusu).
 
 ## Kurulum (Faz 1)
 

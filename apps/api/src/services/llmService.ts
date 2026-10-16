@@ -110,7 +110,9 @@ export class MockProvider implements LlmProvider {
 
     const payload = systemText.includes('naturalnessScore')
       ? mockSentenceAnalysis(lastUserText)
-      : mockTutorReply(lastUserText);
+      : systemText.includes('definitionEN')
+        ? mockWordLookup(lastUserText)
+        : mockTutorReply(lastUserText);
 
     return JSON.stringify(payload);
   }
@@ -139,6 +141,21 @@ function mockTutorReply(text: string) {
       ? 'Cümle büyük harfle başlamalı ve bir noktalama işaretiyle bitmeli.'
       : 'Cümlen gramer açısından doğru, harika!',
     extractedVocabulary: [{ term: 'share', translationTR: 'paylaşmak', example: 'Thanks for sharing that!' }],
+  };
+}
+
+/** Kullanıcı mesajı "Kelime: ... Cümle: ..." biçimindedir; mock yalnızca kelimeyi ve cümleyi geri verir. */
+function mockWordLookup(userText: string) {
+  const word = /Kelime:\s*"([^"]+)"/.exec(userText)?.[1] ?? 'word';
+  const sentence = /Cümle:\s*"([^"]+)"/.exec(userText)?.[1] ?? `The ${word} is here.`;
+
+  return {
+    translationTR: `${word} (mock çeviri)`,
+    partOfSpeech: 'noun',
+    phonetic: null,
+    definitionEN: `A mock definition for "${word}".`,
+    exampleSentence: sentence,
+    synonyms: [],
   };
 }
 

@@ -36,3 +36,17 @@ export const sentenceAnalysisSchema = z.object({
 });
 
 export type SentenceAnalysis = z.infer<typeof sentenceAnalysisSchema>;
+
+/**
+ * Okuyucu sözlüğü: bağlamdaki kelimenin Türkçe anlamı, sözcük türü ve İngilizce tanımı.
+ */
+export const wordLookupSchema = z.object({
+  translationTR: z.string().min(1).max(200),
+  partOfSpeech: z.string().min(1).max(40),
+  phonetic: z.string().max(60).nullable(),
+  definitionEN: z.string().min(1).max(500),
+  exampleSentence: z.string().min(1).max(300),
+  synonyms: z.array(z.string().min(1).max(60)).max(5),
+});
+
+export type WordLookupOutput = z.infer<typeof wordLookupSchema>;

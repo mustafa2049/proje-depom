@@ -63,3 +63,21 @@ export function buildSentenceAnalysisPrompt(input: { sourceTR?: string | undefin
   const instruction = renderTemplate(ANALYSIS_INSTRUCTION, { translationNote, contextNote });
   return [instruction, JSON.stringify(ANALYSIS_SCHEMA, null, 2)].join('\n\n');
 }
+
+const LOOKUP_INSTRUCTION =
+  'Sen bir İngilizce sözlük asistanısın. Sana verilen kelimenin, verilen cümledeki bağlamsal anlamını belirle. ' +
+  'Türkçe çeviri kısa ve bağlama uygun olsun. Çıktıyı SADECE aşağıdaki JSON formatında ver:';
+
+const LOOKUP_SCHEMA = {
+  translationTR: 'Kelimenin bu cümledeki Türkçe karşılığı.',
+  partOfSpeech: 'Sözcük türü (noun, verb, adjective, adverb, phrasal verb, idiom…).',
+  phonetic: 'Amerikan İngilizcesi IPA yazılışı, örn. /ɪˌpɪt.ə.mi/ (bilinmiyorsa null).',
+  definitionEN: 'Kelimenin kısa İngilizce tanımı (bu bağlam için).',
+  exampleSentence: 'Kelimeyi içeren kısa, doğal bir İngilizce örnek cümle.',
+  synonyms: ['en fazla 5 eş anlamlı'],
+};
+
+/** Sözlük sorgusu için sistem promptu. Mock sağlayıcı bu promptu "definitionEN" alanından tanır. */
+export function buildWordLookupPrompt(): string {
+  return [LOOKUP_INSTRUCTION, JSON.stringify(LOOKUP_SCHEMA, null, 2), 'Yalnızca geçerli bir JSON nesnesi yaz.'].join('\n\n');
+}
