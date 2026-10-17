@@ -95,9 +95,11 @@ describe('todayActivity', () => {
     trackedCards: 0,
     retentionRate: null,
     totalXp: 0,
+    srsBreakdown: { new: 0, learning: 0, review: 0, relearning: 0 },
+    weeklyTrend: { days: [], totalXp: 0, accuracyPercent: null },
     heatmap: [
-      { date: '2026-10-15', cardsReviewed: 9, correctCount: 5, durationSec: 0, xpEarned: 40 },
-      { date: '2026-10-16', cardsReviewed: 12, correctCount: 8, durationSec: 0, xpEarned: 90 },
+      { date: '2026-10-15', cardsReviewed: 9, correctCount: 5, durationSec: 0, xpEarned: 40, intensity: 2 as const },
+      { date: '2026-10-16', cardsReviewed: 12, correctCount: 8, durationSec: 0, xpEarned: 90, intensity: 2 as const },
     ],
   };
 

@@ -1,5 +1,6 @@
 export const STORAGE_KEYS = {
   authUser: 'auth.user',
   authTokens: 'auth.tokens',
-  studyPending: 'study.pendingReviews',
+  studyState: 'study.state',
+  settings: 'settings',
 } as const;

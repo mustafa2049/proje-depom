@@ -137,6 +137,7 @@ export function createApiClient(options: ApiClientOptions) {
     request,
     get: <T>(path: string, opts?: RequestOptions) => request<T>('GET', path, opts),
     post: <T>(path: string, opts?: RequestOptions) => request<T>('POST', path, opts),
+    patch: <T>(path: string, opts?: RequestOptions) => request<T>('PATCH', path, opts),
   };
 }
 

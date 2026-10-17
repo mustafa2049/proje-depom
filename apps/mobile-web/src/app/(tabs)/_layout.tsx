@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Bot, BookOpen, House, Puzzle } from 'lucide-react-native';
+import { Bot, BookOpen, House, Puzzle, UserRound } from 'lucide-react-native';
 
 export default function TabsLayout() {
   return (
@@ -37,6 +37,13 @@ export default function TabsLayout() {
         options={{
           title: 'Okuma',
           tabBarIcon: ({ color, size }) => <BookOpen color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profil',
+          tabBarIcon: ({ color, size }) => <UserRound color={color} size={size} />,
         }}
       />
       {/* Odak modu: çalışma ekranında alt navigasyon gizlenir; ekran yalnızca yönlendirmeyle açılır. */}

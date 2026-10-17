@@ -6,6 +6,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { useOfflineSync } from '../hooks/useOfflineSync';
 import { useAuthStore } from '../store/useAuthStore';
 
 export default function RootLayout() {
@@ -15,6 +16,8 @@ export default function RootLayout() {
   useEffect(() => {
     void hydrate();
   }, [hydrate]);
+
+  useOfflineSync();
 
   // Oturum durumu belirlenmeden hiçbir rota mount edilmez; korumalı ekranlar yetkisiz istek atmaz.
   return (

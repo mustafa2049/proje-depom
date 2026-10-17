@@ -14,5 +14,6 @@ export function authRoutes(ctx: AppContext): FastifyPluginAsync {
     app.post('/login', routeRateLimit(10), controller.login);
     app.post('/refresh', routeRateLimit(30), controller.refresh);
     app.get('/me', { preHandler: authenticate }, controller.me);
+    app.patch('/me', { preHandler: authenticate }, controller.updateMe);
   };
 }

@@ -7,7 +7,7 @@ import { appStorage } from '../services/storage';
 import { STORAGE_KEYS } from '../services/appStorageKeys';
 import { secureStorage } from '../services/secureStorage';
 import { session } from '../services/session';
-import type { AuthTokens, PublicUser, RegisterRequest } from '../types/api';
+import type { AuthTokens, ProfileUpdateRequest, PublicUser, RegisterRequest } from '../types/api';
 
 export interface AuthState {
   user: PublicUser | null;
@@ -21,6 +21,7 @@ export interface AuthState {
   register: (input: RegisterRequest) => Promise<void>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
+  updateProfile: (input: ProfileUpdateRequest) => Promise<void>;
 }
 
 function messageOf(error: unknown): string {
@@ -85,6 +86,17 @@ export const useAuthStore = create<AuthState>()(
 
       logout() {
         session.set(null);
+      },
+
+      async updateProfile(input) {
+        set({ errorMessage: null });
+        try {
+          const { user } = await api.auth.updateProfile(input);
+          set({ user });
+        } catch (error) {
+          set({ errorMessage: messageOf(error) });
+          throw error;
+        }
       },
 
       async refreshProfile() {

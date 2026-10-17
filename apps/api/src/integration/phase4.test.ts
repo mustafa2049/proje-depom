@@ -256,9 +256,11 @@ describe.skipIf(!TEST_DATABASE_URL)('Faz 4 API (entegrasyon)', () => {
         .exercises.filter((item: { type: string; source?: string }) => item.type === 'CLOZE' && item.source === 'CARD');
 
       expect(cardCloze.length).toBeGreaterThan(0);
-      const first = cardCloze[0];
-      expect(first.sentence).toContain('___');
-      expect(first.options[first.answerIndex]).toMatch(/^(Cabinet|Blanket|Carpet|Curtain)$/);
+      // Test veritabanı E2E ile paylaşılır ve seed kartları da B1 havuzuna girebilir; bu yüzden
+      // kullanıcının kendi kelimelerinden en az birinin soruda kullanıldığını doğrularız.
+      const learnerTerms = ['Cabinet', 'Blanket', 'Carpet', 'Curtain'];
+      expect(cardCloze.every((item: { sentence: string }) => item.sentence.includes('___'))).toBe(true);
+      expect(cardCloze.some((item: { options: string[]; answerIndex: number }) => learnerTerms.includes(item.options[item.answerIndex] ?? ''))).toBe(true);
     });
 
     it('geçersiz sayı için 400 döner', async () => {

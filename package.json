@@ -20,13 +20,16 @@
     "db:seed": "npm run db:seed --workspace @proje-depom/api",
     "api:dev": "npm run dev --workspace @proje-depom/api",
     "test": "npm run test --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present && npm run typecheck:e2e",
     "mobile:start": "npm run start --workspace @proje-depom/mobile-web",
     "mobile:web": "npm run web --workspace @proje-depom/mobile-web",
     "mobile:export": "npm run export:web --workspace @proje-depom/mobile-web",
-    "mobile:test": "npm run test --workspace @proje-depom/mobile-web"
+    "mobile:test": "npm run test --workspace @proje-depom/mobile-web",
+    "typecheck:e2e": "tsc -p e2e/tsconfig.json",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "1.56.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5"

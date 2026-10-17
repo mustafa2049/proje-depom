@@ -613,8 +613,9 @@ describe.skipIf(!TEST_DATABASE_URL)('Phase 2 API (entegrasyon)', () => {
       const body = res.json();
       expect(body.retentionRate).toBe(50);
       expect(body.trackedCards).toBe(2);
-      expect(body.heatmap).toHaveLength(30);
-      expect(body.heatmap[29].cardsReviewed).toBe(2);
+      expect(body.heatmap).toHaveLength(90);
+      expect(body.heatmap[89].cardsReviewed).toBe(2);
+      expect(body.heatmap[89].intensity).toBe(1);
       expect(body.totalXp).toBe(13);
     });
   });

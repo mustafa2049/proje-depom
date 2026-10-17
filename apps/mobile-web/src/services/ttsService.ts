@@ -1,3 +1,5 @@
+import { useSettingsStore } from '../store/useSettingsStore';
+
 import type { SpeakOptions, SpeechEngine } from './tts/engine';
 import { createPlatformSpeechEngine } from './tts/platform';
 
@@ -27,7 +29,7 @@ export function speak(text: string, options: SpeechOptions = {}): void {
   }
 
   const rate = Math.min(MAX_RATE, Math.max(MIN_RATE, options.rate ?? NORMAL_RATE));
-  engine.speak(trimmed, { accent: options.accent ?? 'en-US', rate });
+  engine.speak(trimmed, { accent: options.accent ?? useSettingsStore.getState().accent, rate });
 }
 
 export function stop(): void {

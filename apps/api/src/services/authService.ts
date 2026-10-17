@@ -114,3 +114,27 @@ export async function getCurrentUser(db: PrismaClient, userId: string): Promise<
   }
   return toPublicUser(user);
 }
+
+export interface ProfileUpdate {
+  name?: string | undefined;
+  currentLevel?: CEFRLevel | undefined;
+  dailyGoalCards?: number | undefined;
+}
+
+/** Profil ve öğrenme hedefini günceller; yalnızca verilen alanlar değişir. */
+export async function updateProfile(db: PrismaClient, userId: string, input: ProfileUpdate): Promise<PublicUser> {
+  const data: { name?: string; currentLevel?: CEFRLevel; dailyGoalCards?: number } = {};
+  if (input.name !== undefined) data.name = input.name;
+  if (input.currentLevel !== undefined) data.currentLevel = input.currentLevel;
+  if (input.dailyGoalCards !== undefined) data.dailyGoalCards = input.dailyGoalCards;
+
+  try {
+    const user = await db.user.update({ where: { id: userId }, data });
+    return toPublicUser(user);
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      throw new NotFoundError('Kullanıcı bulunamadı');
+    }
+    throw error;
+  }
+}

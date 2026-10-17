@@ -42,6 +42,13 @@ export interface PendingReview {
   reviewedAt: string;
 }
 
+/** Son çevrimiçi yüklemenin kuyruk anlık görüntüsü (çevrimdışı çalışma için). */
+export interface CachedDueQueue {
+  deckId: string | null;
+  items: StudyItem[];
+  savedAt: string;
+}
+
 export type StudyStatus = 'idle' | 'loading' | 'studying' | 'finished' | 'empty' | 'error';
 
 export interface StudyState {
@@ -56,6 +63,9 @@ export interface StudyState {
   lastXpGain: number;
   sessionStats: SessionStats;
   pendingReviews: PendingReview[];
+  cachedDueQueue: CachedDueQueue | null;
+  /** Son işlem ağ hatasıyla sonuçlandıysa (önbellek veya yerel tahmin kullanılıyor). */
+  isOffline: boolean;
 
   loadDueQueue: (deckId?: string) => Promise<void>;
   flipCard: () => void;
@@ -120,6 +130,15 @@ function localOutcome(item: StudyItem, quality: ReviewQuality, reviewedAt: Date)
   };
 }
 
+/**
+ * Önbellekteki kuyruktan, bekleyen değerlendirmesi olan kartları çıkarır.
+ * Bu sayede çevrimdışıyken aynı kart iki kez sorulmaz.
+ */
+export function filterCachedItems(items: readonly StudyItem[], pending: readonly PendingReview[]): StudyItem[] {
+  const pendingIds = new Set(pending.map((review) => review.cardId));
+  return items.filter((item) => !pendingIds.has(item.card.id));
+}
+
 /** Aynı anda birden fazla flush çağrısını tek bir döngüde birleştirmek için. */
 let flushing = false;
 
@@ -131,8 +150,26 @@ function isPermanentRejection(error: unknown): boolean {
 export const useStudyStore = create<StudyState>()(
   persist(
     (set, get) => {
-      /** Değerlendirme sonucunu uygular: istatistik, XP, kuyruk ve bir sonraki karta geçiş. */
-      function advance(item: StudyItem, quality: ReviewQuality, outcome: Outcome): void {
+      /** Oturumu verilen kartlarla başlatır; liste boşsa "empty" durumuna geçer. */
+      function startSession(items: StudyItem[]): void {
+        if (items.length === 0) {
+          set({ status: 'empty', queue: [], currentIndex: 0, cardStartTimeMs: null, sessionStats: emptySessionStats() });
+          return;
+        }
+        const now = Date.now();
+        set({
+          status: 'studying',
+          queue: items,
+          currentIndex: 0,
+          isFlipped: false,
+          cardStartTimeMs: now,
+          lastXpGain: 0,
+          sessionStats: { ...emptySessionStats(), startedAt: now },
+        });
+      }
+
+      /** Değerlendirme sonucunu uygular: istatistik, XP, kuyruk, önbellek ve bir sonraki karta geçiş. */
+      function advance(item: StudyItem, quality: ReviewQuality, outcome: Outcome, offline: boolean): void {
         const updated: StudyItem = { card: item.card, srs: outcome.srs, isNew: false };
 
         set((state) => {
@@ -140,14 +177,22 @@ export const useStudyStore = create<StudyState>()(
           const nextIndex = state.currentIndex + 1;
           const finished = nextIndex >= queue.length;
 
+          // Again dışındaki bir değerlendirme kartı bugünün kuyruğundan çıkarır.
+          const cachedDueQueue =
+            state.cachedDueQueue && quality !== REVIEW_QUALITY.AGAIN
+              ? { ...state.cachedDueQueue, items: state.cachedDueQueue.items.filter((cached) => cached.card.id !== item.card.id) }
+              : state.cachedDueQueue;
+
           return {
             queue,
             currentIndex: nextIndex,
             isFlipped: false,
             isSubmitting: false,
+            isOffline: offline,
             status: finished ? 'finished' : 'studying',
             cardStartTimeMs: finished ? null : Date.now(),
             lastXpGain: outcome.xpEarned,
+            cachedDueQueue,
             sessionStats: {
               ...state.sessionStats,
               reviewedCount: state.sessionStats.reviewedCount + 1,
@@ -162,31 +207,31 @@ export const useStudyStore = create<StudyState>()(
       return {
         ...INITIAL_STATE,
         pendingReviews: [],
+        cachedDueQueue: null,
+        isOffline: false,
 
         async loadDueQueue(deckId) {
-          set({ status: 'loading', deckId: deckId ?? null, errorMessage: null, isFlipped: false });
+          const requestedDeck = deckId ?? null;
+          set({ status: 'loading', deckId: requestedDeck, errorMessage: null, isFlipped: false });
 
           // Önceki oturumdan kalan çevrimdışı değerlendirmeler önce gönderilmeye çalışılır.
           await get().flushPendingReviews();
 
           try {
             const response = await api.srs.due({ limit: SESSION_LIMIT, deckId });
-            if (response.items.length === 0) {
-              set({ status: 'empty', queue: [], currentIndex: 0, cardStartTimeMs: null, sessionStats: emptySessionStats() });
+            const items = response.items.map(toStudyItem);
+            set({
+              cachedDueQueue: { deckId: requestedDeck, items, savedAt: new Date().toISOString() },
+              isOffline: false,
+            });
+            startSession(items);
+          } catch (error) {
+            const cache = get().cachedDueQueue;
+            if (isNetworkError(error) && cache && cache.deckId === requestedDeck) {
+              set({ isOffline: true });
+              startSession(filterCachedItems(cache.items, get().pendingReviews));
               return;
             }
-
-            const now = Date.now();
-            set({
-              status: 'studying',
-              queue: response.items.map(toStudyItem),
-              currentIndex: 0,
-              isFlipped: false,
-              cardStartTimeMs: now,
-              lastXpGain: 0,
-              sessionStats: { ...emptySessionStats(), startedAt: now },
-            });
-          } catch (error) {
             set({ status: 'error', errorMessage: messageOf(error) });
           }
         },
@@ -216,16 +261,21 @@ export const useStudyStore = create<StudyState>()(
               durationMs,
               reviewedAt: reviewedAt.toISOString(),
             });
-            advance(item, quality, {
-              srs: {
-                status: result.status as SrsProgress['status'],
-                repetitions: result.repetitions,
-                easeFactor: result.easeFactor,
-                interval: result.interval,
-                nextReviewDate: result.nextReviewDate,
+            advance(
+              item,
+              quality,
+              {
+                srs: {
+                  status: result.status as SrsProgress['status'],
+                  repetitions: result.repetitions,
+                  easeFactor: result.easeFactor,
+                  interval: result.interval,
+                  nextReviewDate: result.nextReviewDate,
+                },
+                xpEarned: result.xpEarned,
               },
-              xpEarned: result.xpEarned,
-            });
+              false,
+            );
           } catch (error) {
             if (!isNetworkError(error)) {
               set({ isSubmitting: false, errorMessage: messageOf(error) });
@@ -241,7 +291,7 @@ export const useStudyStore = create<StudyState>()(
               reviewedAt: reviewedAt.toISOString(),
             };
             set((current) => ({ pendingReviews: [...current.pendingReviews, pending] }));
-            advance(item, quality, localOutcome(item, quality, reviewedAt));
+            advance(item, quality, localOutcome(item, quality, reviewedAt), true);
           }
         },
 
@@ -287,9 +337,9 @@ export const useStudyStore = create<StudyState>()(
       };
     },
     {
-      name: STORAGE_KEYS.studyPending,
+      name: STORAGE_KEYS.studyState,
       storage: createJSONStorage(() => appStorage),
-      partialize: (state) => ({ pendingReviews: state.pendingReviews }),
+      partialize: (state) => ({ pendingReviews: state.pendingReviews, cachedDueQueue: state.cachedDueQueue }),
     },
   ),
 );

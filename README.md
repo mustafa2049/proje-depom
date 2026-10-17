@@ -1,138 +1,182 @@
 # proje-depom
 
-Uçtan uca İngilizce çalışma uygulaması: aralıklı tekrar (SM-2), yapay zeka konuşma pratiği, cümle kurma, interaktif okuyucu ve analitik.
+Uçtan uca İngilizce çalışma platformu: aralıklı tekrar (SM-2), yapay zeka destekli konuşma pratiği, cümle kurma laboratuvarı, interaktif okuyucu, istatistikler ve çevrimdışı çalışma. Web ve mobil (Expo) için tek kod tabanı.
 
-## Yapı
+## Özellikler
+
+| Faz | Kapsam |
+|---|---|
+| 1 | Altyapı, Prisma şeması, seed verisi, SM-2 algoritması (paylaşılan paket) |
+| 2 | REST API: kimlik doğrulama, desteler/kartlar, SRS kuyruğu ve değerlendirme, AI sohbet, istatistikler |
+| 3 | Expo uygulaması: giriş/kayıt, dashboard, 3D flashcard çalışması, klavye kısayolları, çevrimdışı kuyruk |
+| 4 | AI Tutor (senaryolar, satır içi gramer geri bildirimi, sesli giriş), Pratik (kelime sıralama, boşluk doldurma, çeviri lab'ı), Okuma (tıklanabilir metin, sözlük, okuduğunu anlama) |
+| 5 | Profil ve ayarlar, ısı haritası (90 gün), SRS bellek dağılımı, haftalık trend, çevrimdışı önbellek ve otomatik senkronizasyon, uçtan uca test paketi |
+
+## Mimari
 
 ```
-apps/
-  api/            Backend (Node.js + Prisma + PostgreSQL)
-    prisma/       Şema, migrasyonlar, seed verisi
-    src/utils/    SM-2 algoritması (srsAlgorithm.ts) ve birim testleri
-    src/lib/      Prisma istemcisi
+proje-depom/
+├── apps/
+│   ├── api/                       Backend (Fastify + Prisma + PostgreSQL)
+│   │   ├── prisma/                Şema, migrasyonlar, seed (schema.prisma, seed.ts)
+│   │   ├── src/
+│   │   │   ├── app.ts             buildApp(): eklentiler, rotalar, hata işleyici
+│   │   │   ├── server.ts          Dinleme ve kapatma
+│   │   │   ├── config/env.ts      Ortam değişkeni doğrulaması (zod)
+│   │   │   ├── routes/            /api/auth, decks, cards, srs, ai, stats, reader, practice
+│   │   │   ├── controllers/       HTTP katmanı (girdi doğrulama + servis çağrısı)
+│   │   │   ├── services/          İş mantığı: auth, deck, srs, stats, reader, practice, LLM sağlayıcıları
+│   │   │   ├── middlewares/       JWT doğrulama, oran sınırlama
+│   │   │   ├── content/           Okuma parçaları ve alıştırma havuzu (statik içerik)
+│   │   │   ├── lib/               Prisma istemcisi, hatalar, parola (scrypt), tarih yardımcıları
+│   │   │   └── integration/       Uçtan uca API testleri (gerçek PostgreSQL)
+│   │   └── prisma.config.ts
+│   └── mobile-web/                Expo SDK 54 uygulaması (iOS, Android, web)
+│       └── src/
+│           ├── app/               Expo Router ekranları: (auth), (tabs) [index, practice, ai-tutor, reader, profile, study]
+│           ├── components/        ui, flashcard, dashboard, ai, practice, reader, stats, sync
+│           ├── store/             Zustand: auth, deck, stats, study, tutor, practice, reader, settings
+│           ├── services/          API istemcisi (401 → tek refresh), uç noktalar, TTS, depolama, senkronizasyon
+│           ├── hooks/             useOfflineSync
+│           └── utils/             Yardımcılar ve saf fonksiyonlar (ısı haritası, tokenizasyon, klavye, ...)
+├── packages/
+│   └── shared/                    SM-2 algoritması, XP tablosu, buton önizlemesi (API ve mobil ortak)
+├── e2e/                           Playwright uçtan uca testleri (tüm fazlar)
+├── scripts/                       E2E için API ve web sunucu başlatıcıları
+├── playwright.config.ts
+└── docker-compose.yml             Yerel PostgreSQL 16
 ```
 
-Frontend (`apps/mobile-web`) sonraki fazlarda eklenecek.
+**Teknoloji yığını:** TypeScript (strict) · Fastify 5 · Prisma 7 (pg adapter) · PostgreSQL 16 · zod 4 · @fastify/jwt · OpenAI / Gemini / mock LLM · Expo SDK 54 · Expo Router · NativeWind · Reanimated 4 · Zustand 5 · Lucide · Vitest 5 · Playwright Test 1.56.
 
-## API (Faz 2)
+## Kurulum
 
-Base URL: `http://localhost:3000` · Korumalı uçlar `Authorization: Bearer <accessToken>` ister.
+Gereksinimler: Node.js ≥ 20.11, Docker (veya yerel PostgreSQL 16).
+
+```bash
+npm install                     # tüm workspace'ler
+npm run db:up                   # PostgreSQL (docker compose)
+cp apps/api/.env.example apps/api/.env
+npm run db:migrate              # migrasyonlar
+npm run db:seed                 # 25 temel kelime, phrasal verb ve deyim
+```
+
+### Çalıştırma
+
+```bash
+npm run api:dev                 # API: http://localhost:3000
+npm run mobile:web              # Web geliştirme sunucusu (Expo)
+npm run mobile:export           # Statik web çıktısı: apps/mobile-web/dist/
+```
+
+### Ortam değişkenleri
+
+`apps/api/.env` (ayrıntılar `.env.example` içinde):
+
+| Değişken | Varsayılan | Açıklama |
+|---|---|---|
+| `DATABASE_URL` | — | PostgreSQL bağlantı dizesi (zorunlu) |
+| `JWT_SECRET` | — | En az 32 karakter (zorunlu) |
+| `ACCESS_TOKEN_TTL_SEC` / `REFRESH_TOKEN_TTL_SEC` | 900 / 2592000 | Token süreleri |
+| `CORS_ORIGINS` | `localhost:8081,localhost:19006` | İzin verilen web kökenleri |
+| `AI_PROVIDER` | `auto` | `auto` · `openai` · `gemini` · `mock` (auto: OpenAI → Gemini → mock) |
+| `OPENAI_API_KEY` / `OPENAI_MODEL` | — / `gpt-4o-mini` | OpenAI sağlayıcısı |
+| `GEMINI_API_KEY` / `GEMINI_MODEL` | — / `gemini-2.0-flash` | Gemini sağlayıcısı |
+| `RATE_LIMIT_ENABLED` | `true` | Oran sınırlamasını açıp kapatır |
+| `TEST_DATABASE_URL` | — | Entegrasyon ve E2E testleri için ayrı veritabanı |
+
+`apps/mobile-web/.env.example`: `EXPO_PUBLIC_API_URL` (varsayılan `http://localhost:3000`).
+
+## API uç noktaları
+
+Tümü JSON. Korumalı uçlar `Authorization: Bearer <accessToken>` ister. Hatalar: `{ "error": { "code", "message", "details?" } }` (400/401/403/404/409/429/502).
+
+**Kimlik doğrulama** (`/api/auth`)
 
 | Yöntem | Yol | Açıklama |
 |---|---|---|
-| POST | `/api/auth/register` | Kayıt (`email`, `password`, `name`, `currentLevel?`) → token çifti |
-| POST | `/api/auth/login` | Giriş → token çifti |
-| POST | `/api/auth/refresh` | `refreshToken` ile yeni token çifti |
-| GET | `/api/auth/me` | Profil, seri (`streakCount`), günlük hedef |
-| GET | `/api/decks` | Sistem + kendi destelerin, kart sayısı ve `new/learning/review` özeti |
+| POST | `/register` | `email`, `password` (≥ 8), `name`, `currentLevel?`, `dailyGoalCards?` → token çifti |
+| POST | `/login` | Giriş → token çifti |
+| POST | `/refresh` | `refreshToken` ile yeni token çifti |
+| GET | `/me` | Profil: seviye, günlük hedef, seri, son çalışma |
+| PATCH | `/me` | `name?`, `currentLevel?`, `dailyGoalCards?` (1–200); güncel profili döner |
+
+**Desteler ve kartlar**
+
+| Yöntem | Yol | Açıklama |
+|---|---|---|
+| GET | `/api/decks` | Sistem + kendi desteleri, kart sayısı ve `new/learning/review` özeti |
 | GET | `/api/decks/:id/cards` | Destenin kartları ve kullanıcının SRS durumu (`limit`, `offset`) |
-| POST | `/api/cards` | Kendi destene kart ekle (`deckId` yoksa "Kelimelerim" destesi) |
-| GET | `/api/srs/due` | Bugünün kuyruğu: vadesi gelen tekrarlar + günlük kota kadar yeni kart (`limit`, `deckId`) |
-| POST | `/api/srs/review` | `{ cardId, quality: 0-3, durationMs }` — SM-2 güncellemesi, oturum ve seri |
-| POST | `/api/ai/chat` | `{ sessionId?, scenario, message }` — düzeltme + AI yanıtı |
-| POST | `/api/ai/analyze-sentence` | `{ sentence, sourceTR?, context? }` — gramer ve doğallık analizi |
-| GET | `/api/ai/sessions` | Sohbet oturumları |
-| GET | `/api/ai/sessions/:id` | Oturum ve mesajları |
-| GET | `/api/stats/overview` | Seri, öğrenilen kart, doğruluk oranı, 30 günlük ısı haritası, toplam XP |
-| GET | `/api/reader/passages` | Okuma parçaları (özet), `?level=A1…C2` filtresi |
-| GET | `/api/reader/passages/:id` | Parça: içerik, anahtar kelimeler, 3 okuduğunu anlama sorusu |
-| POST | `/api/reader/lookup` | `{ word, contextSentence }` — önce kartlarda arar (DECK), yoksa bağlamsal AI çözümü (AI) |
-| GET | `/api/practice/exercises` | `?level&count` — kelime sıralama, boşluk doldurma (kullanıcı kartlarından dahil) ve çeviri soruları |
+| POST | `/api/cards` | Kendi destesine kart ekle (`deckId` yoksa "Kelimelerim") |
 
-Hatalar: `{ "error": { "code", "message", "details?" } }` biçimindedir (400/401/403/404/409/429/502).
+**SRS** (`/api/srs`)
 
-### Yapay zeka sağlayıcısı
+| Yöntem | Yol | Açıklama |
+|---|---|---|
+| GET | `/due` | Bugünün kuyruğu: vadesi gelen tekrarlar + günlük yeni kart kotası (`limit`, `deckId`) |
+| POST | `/review` | `{ cardId, quality: 0–3, durationMs, reviewedAt? }` — SM-2, oturum, seri |
 
-`AI_PROVIDER=auto` (varsayılan): `OPENAI_API_KEY` varsa OpenAI, yoksa `GEMINI_API_KEY` ile Gemini, ikisi de yoksa
-deterministik **mock** sağlayıcı kullanılır. Mock, API anahtarı olmadan geliştirme ve testleri mümkün kılar.
+**Yapay zeka** (`/api/ai`)
 
-### Testler
+| Yöntem | Yol | Açıklama |
+|---|---|---|
+| POST | `/chat` | `{ sessionId?, scenario, message }` — düzeltme + AI yanıtı |
+| POST | `/analyze-sentence` | `{ sentence, sourceTR?, context? }` — skor, düzeltme, doğal alternatif |
+| GET | `/sessions` | Sohbet oturumları |
+| GET | `/sessions/:id` | Oturum ve mesajları |
 
-Entegrasyon testleri ayrı bir veritabanı kullanır (`TEST_DATABASE_URL`):
+**İstatistikler** (`/api/stats`)
+
+| Yöntem | Yol | Açıklama |
+|---|---|---|
+| GET | `/overview` | Seri, öğrenilen kart, `srsBreakdown` (new/learning/review/relearning), 30 günlük tutma oranı, 90 günlük `heatmap` (yoğunluk 0–4), 7 günlük `weeklyTrend`, toplam XP |
+
+**Okuyucu ve alıştırmalar**
+
+| Yöntem | Yol | Açıklama |
+|---|---|---|
+| GET | `/api/reader/passages` | Okuma parçaları (özet), `?level=A1…C2` |
+| GET | `/api/reader/passages/:id` | İçerik, anahtar kelimeler, okuduğunu anlama soruları |
+| POST | `/api/reader/lookup` | `{ word, contextSentence }` — önce kartlarda (DECK), yoksa bağlamsal AI çözümü (AI) |
+| GET | `/api/practice/exercises` | `?level&count` — kelime sıralama, boşluk doldurma (kullanıcı kartlarından dahil), çeviri |
+
+**Diğer:** `GET /health`.
+
+Yoğunluk eşikleri (`heatmap.intensity`): 0 kart → 0, 1–5 → 1, 6–15 → 2, 16–30 → 3, 31+ → 4.
+
+## Testler
 
 ```bash
-# Test veritabanını migrate et (bir kez)
+npm test                        # tüm workspace'ler: API (86), mobil (86), paylaşılan paket (24)
+npm run typecheck               # tüm workspace'ler + e2e
+npm run test:e2e                # Playwright: gerçek API + derlenmiş web uygulaması
+```
+
+**Entegrasyon testleri** gerçek PostgreSQL kullanır. Ayrı bir test veritabanı oluşturun ve migrasyonu uygulayın:
+
+```bash
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/english_app_test?schema=public" npm run prisma:deploy --workspace @proje-depom/api
-
-npm run api:test
-npm run api:typecheck
 ```
 
-Geliştirme sunucusu: `npm run api:dev`.
+`TEST_DATABASE_URL` tanımlı değilse bu testler atlanır.
 
-## Mobil ve Web Uygulaması (Faz 3)
+**E2E testleri** `e2e/journey.spec.ts` içinde tüm fazları tek bir kullanıcı üzerinden sıralı olarak çalıştırır: kayıt, SRS çalışması, çevrimdışı çalışma ve otomatik senkronizasyon, AI Tutor, okuma, pratik, profil ve ısı haritası, hedef güncelleme, çıkış. Çalıştırma sırasında `scripts/e2e-api.mjs` test veritabanını migrate eder, seed'ler ve API'yi başlatır; `scripts/e2e-web.mjs` web uygulamasını derleyip sunar.
 
-Stack: Expo SDK 54 · Expo Router (dosya tabanlı yönlendirme, `src/app`) · NativeWind (Tailwind) · Reanimated · Zustand · Lucide.
+- Tarayıcı: `CHROMIUM_PATH` tanımlıysa o tarayıcı kullanılır; aksi halde `npx playwright install chromium` çalıştırın.
+- Raporlar: `playwright-report/` (HTML) ve `test-results/` (izler, ekran görüntüleri) — ikisi de `.gitignore` içindedir.
 
-```bash
-# API'yi başlat (ayrı terminal)
-npm run api:dev
+## Tasarım kararları ve sınırlar
 
-# Web geliştirme sunucusu
-npm run mobile:web
+- **SM-2:** Again 10 dakika sonrasına, Hard `1 → 3 → max(interval+1, round(interval×1.2))`, Good/Easy SM-2 kuralları. Günler UTC gün başlangıcına yuvarlanır.
+- **Çevrimdışı:** değerlendirme yerel SRS sonucuyla kuyruğa yazılır, `reviewedAt` ile sunucuya iletilir (7 güne kadar geriye dönük). Önbellekteki kuyruk, bekleyen kartları çıkararak çalışmayı sürdürür.
+- **Oturum tokenları:** web'de `localStorage`, native'de `expo-secure-store` (web'de şifreleme yoktur). Refresh token'ları durum tutmaz; iptal edilemez.
+- **Parola:** Node'un yerleşik `scrypt` ile hash'lenir.
+- **Sözlük:** kart kaynağında anlam kartın genel çevirisidir; bağlamsal çeviri yalnızca AI kaynağında gelir.
+- **Alıştırma cevapları** istemciye gönderilir (kelime sıralama ve boşluk doldurma doğrulaması istemcide yapılır); öğrenme amaçlı bir uygulama için kabul edilmiştir.
+- **Sesli giriş** yalnızca Web Speech API destekleyen web tarayıcılarında çalışır.
+- **LLM:** gerçek OpenAI/Gemini çağrıları anahtar gerektirir; testler ve E2E mock sağlayıcıyla çalışır.
+- **Güvenlik:** `npm audit` uyarıları Expo SDK 54 araç zincirinden (Expo CLI, Metro, Jest) gelir; uygulama paketine girmez. Düzeltmek Expo'nun büyük sürüm güncellemesini gerektirir.
 
-# Statik web çıktısı
-npm run mobile:export        # çıktı: apps/mobile-web/dist/ (gitignore edilir)
-```
+## Faz geçmişi
 
-API adresi `apps/mobile-web/.env.example` içindeki `EXPO_PUBLIC_API_URL` ile ayarlanır (varsayılan `http://localhost:3000`).
-API tarafında web kökeni için `CORS_ORIGINS` içinde ilgili adres olmalıdır (varsayılan: `localhost:8081`, `localhost:19006`).
-
-### Yapı
-
-```
-packages/shared/          SM-2 algoritması, XP tablosu, buton önizlemesi (API ve mobil ortak)
-apps/mobile-web/src/
-  app/                    Ekranlar: (auth)/login, register · (tabs)/index (dashboard), study (odak modu)
-  components/             ui/, flashcard/ (FlipCard, SRSButtons, SessionSummary), dashboard/
-  store/                  useAuthStore, useDeckStore, useStatsStore, useStudyStore (çevrimdışı kuyruk)
-  services/               api.ts (401 → tek refresh → tekrar), endpoints.ts, ttsService.ts, depolama soyutlamaları
-  utils/                  klavye eşlemesi, metin vurgulama, doğrulama, istatistik yardımcıları
-```
-
-### Özellikler
-
-- **Kimlik doğrulama:** kayıt (seviye ve günlük hedef seçimi), giriş, oturum koruması. Token'lar web'de `localStorage`, native'de `expo-secure-store` ile saklanır.
-- **Dashboard:** seri, seviye rozeti, günlük hedef ilerlemesi, deste listesi (yeni/öğreniliyor/tekrar sayaçları), kart ekleme modalı.
-- **SRS çalışması:** 3D çevirme, US/UK telaffuz ve yavaş mod (0.75x), dört butonda bir sonraki tekrar süresi (`10 dk`, `3 gün`…), Again kartı oturum sonuna yeniden ekler, sarsıntı ve haptik geri bildirim.
-- **Klavye (web):** `Space`/`Enter` çevirir, `1-4` Again/Hard/Good/Easy, `R` telaffuzu tekrarlar.
-- **Çevrimdışı:** ağ hatasında değerlendirme yerel SRS sonucuyla kaydedilir, bağlantı gelince `flushPendingReviews` ile gönderilir. Gerçek değerlendirme zamanı `reviewedAt` ile sunucuya iletilir.
-
-### Testler
-
-```bash
-npm run mobile:test          # API istemcisi, study store ve yardımcılar
-npm run test                 # tüm workspace'ler (API, paylaşılan paket, mobil)
-npm run typecheck            # tüm workspace'ler
-```
-
-## Faz 4: AI Tutor, Pratik ve Okuma
-
-- **AI Tutor** (`ai-tutor`): senaryo seçici (5 senaryo), geçmiş oturumlar, sohbet balonları, her kullanıcı mesajının altında gramer geri bildirimi (kusursuz rozeti, düzeltme, Türkçe açıklama, doğal alternatif), AI yanıtında çeviri gösterme ve sesli dinleme, çıkarılan kelimeleri tek dokunuşla desteye ekleme. Web'de sesli giriş (Web Speech API) destekler.
-- **Pratik** (`practice`): seviye seçimi, üç modlu set. Kelime sıralama (karışık kelimeleri dizme, geri alma), boşluk doldurma (4 şık, anlık geri bildirim), çeviri lab'ı (TR→EN, `analyze-sentence` ile skor ve düzeltme).
-- **Okuma** (`reader`): seviye filtreli kütüphane, tıklanabilir metin, tüm metni sesli okuma, kelime sayfası (anlam, IPA, tanım, SRS'ye ekleme; yinelenen eklemeyi engeller), okuduğunu anlama soruları.
-
-Okuma parçaları ve alıştırma havuzu `apps/api/src/content/` altında statik olarak tutulur (7 parça, 8 kelime sıralama, 8 boşluk doldurma, 6 çeviri sorusu).
-
-## Kurulum (Faz 1)
-
-Gereksinimler: Node.js >= 20.11, Docker (veya yerel PostgreSQL 16).
-
-```bash
-# 1. Bağımlılıklar (workspace kökünden)
-npm install
-
-# 2. PostgreSQL'i başlat
-npm run db:up
-
-# 3. Ortam değişkenleri
-cp apps/api/.env.example apps/api/.env
-
-# 4. Migrasyonları uygula ve seed verisini yükle
-npm run db:migrate
-npm run db:seed
-
-# 5. Testler ve tip kontrolü
-npm run api:test
-npm run api:typecheck
-```
+`git log --oneline` ile tüm commit'ler: Faz 1 (`825a5c7`), Faz 2 (`0552434`), Faz 3 (`da94efb`), Faz 4 (`bf8feb2`), Faz 5 (bu sürümün commit'i).

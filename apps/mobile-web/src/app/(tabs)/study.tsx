@@ -6,6 +6,7 @@ import { X } from 'lucide-react-native';
 import { previewNextIntervals, type ReviewQuality } from '@proje-depom/shared';
 
 import { FlipCard } from '../../components/flashcard/FlipCard';
+import { SyncBanner } from '../../components/sync/SyncBanner';
 import { SessionSummary } from '../../components/flashcard/SessionSummary';
 import { SRSButtons } from '../../components/flashcard/SRSButtons';
 import { Button } from '../../components/ui/Button';
@@ -30,8 +31,8 @@ export default function StudyScreen() {
   const lastXpGain = useStudyStore((state) => state.lastXpGain);
   const sessionStats = useStudyStore((state) => state.sessionStats);
   const pendingCount = useStudyStore((state) => state.pendingReviews.length);
+  const isOffline = useStudyStore((state) => state.isOffline);
   const loadDueQueue = useStudyStore((state) => state.loadDueQueue);
-  const flushPendingReviews = useStudyStore((state) => state.flushPendingReviews);
   const flipCard = useStudyStore((state) => state.flipCard);
   const submitReview = useStudyStore((state) => state.submitReview);
   const resetSession = useStudyStore((state) => state.resetSession);
@@ -69,16 +70,6 @@ export default function StudyScreen() {
     // Oturum yalnızca deste değiştiğinde yeniden başlar.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deckId]);
-
-  // Çevrimdışıyken biriken değerlendirmeler bağlantı geri geldiğinde gönderilir (web).
-  useEffect(() => {
-    if (Platform.OS !== 'web') {
-      return;
-    }
-    const onOnline = () => void flushPendingReviews();
-    window.addEventListener('online', onOnline);
-    return () => window.removeEventListener('online', onOnline);
-  }, [flushPendingReviews]);
 
   // Web klavye kısayolları: Space/Enter çevirir, 1-4 değerlendirir, R telaffuzu tekrarlar.
   useEffect(() => {
@@ -145,11 +136,14 @@ export default function StudyScreen() {
         {lastXpGain > 0 && status === 'studying' ? <Text className="text-sm font-bold text-accent">+{lastXpGain} XP</Text> : null}
       </View>
 
-      {pendingCount > 0 ? (
+      {isOffline ? (
         <View className="mx-4 rounded-xl bg-warning/15 px-4 py-2">
-          <Text className="text-center text-xs text-warning">
-            Çevrimdışı: {pendingCount} değerlendirme bağlantı gelince gönderilecek.
-          </Text>
+          <Text className="text-center text-xs text-warning">Çevrimdışısınız: önbellekteki kuyruk kullanılıyor.</Text>
+        </View>
+      ) : null}
+      {pendingCount > 0 ? (
+        <View className="mx-4">
+          <SyncBanner />
         </View>
       ) : null}
 

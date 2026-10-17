@@ -10,6 +10,7 @@ import type {
   DeckSummary,
   LookupResult,
   PracticeExercise,
+  ProfileUpdateRequest,
   PublicUser,
   ReadingPassage,
   ReadingPassageSummary,
@@ -30,6 +31,7 @@ export function createEndpoints(client: ApiClient) {
       login: (email: string, password: string) =>
         client.post<AuthResponse>('/api/auth/login', { body: { email, password }, auth: false }),
       me: () => client.get<{ user: PublicUser }>('/api/auth/me'),
+      updateProfile: (body: ProfileUpdateRequest) => client.patch<{ user: PublicUser }>('/api/auth/me', { body }),
     },
 
     decks: {

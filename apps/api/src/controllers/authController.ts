@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import type { AppContext } from '../app-context';
 import { parseWith } from '../lib/validation';
-import { getCurrentUser, loginUser, refreshSession, registerUser } from '../services/authService';
+import { getCurrentUser, loginUser, refreshSession, registerUser, updateProfile } from '../services/authService';
 
 const emailSchema = z
   .string()
@@ -18,6 +18,16 @@ const registerBody = z.object({
   currentLevel: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']).default('A2'),
   dailyGoalCards: z.coerce.number().int().min(1).max(200).default(30),
 });
+
+const profileBody = z
+  .object({
+    name: z.string().trim().min(1).max(100).optional(),
+    currentLevel: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']).optional(),
+    dailyGoalCards: z.coerce.number().int().min(1, 'Günlük hedef en az 1 olmalı').max(200, 'Günlük hedef en fazla 200 olabilir').optional(),
+  })
+  .refine((value) => Object.values(value).some((item) => item !== undefined), {
+    message: 'Güncellenecek en az bir alan gerekli',
+  });
 
 const loginBody = z.object({
   email: emailSchema,
@@ -50,6 +60,12 @@ export function createAuthController(ctx: AppContext) {
 
     async me(request: FastifyRequest, reply: FastifyReply) {
       const user = await getCurrentUser(ctx.db, request.user.sub);
+      return reply.send({ user });
+    },
+
+    async updateMe(request: FastifyRequest, reply: FastifyReply) {
+      const body = parseWith(profileBody, request.body);
+      const user = await updateProfile(ctx.db, request.user.sub, body);
       return reply.send({ user });
     },
   };

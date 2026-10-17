@@ -7,6 +7,7 @@ import { Flame, LogOut, Play, Plus } from 'lucide-react-native';
 import { AddCardModal } from '../../components/dashboard/AddCardModal';
 import { DailyGoalCard } from '../../components/dashboard/DailyGoalCard';
 import { DeckListItem } from '../../components/dashboard/DeckListItem';
+import { SyncBanner } from '../../components/sync/SyncBanner';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -63,6 +64,8 @@ export default function DashboardScreen() {
             </View>
           </View>
         </View>
+
+        <SyncBanner />
 
         <DailyGoalCard cardsToday={today.cardsReviewed} goal={user?.dailyGoalCards ?? 30} xpToday={today.xpEarned} />
 

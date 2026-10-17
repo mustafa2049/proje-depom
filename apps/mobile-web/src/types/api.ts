@@ -115,6 +115,31 @@ export interface CreateCardRequest {
   synonyms: string[];
 }
 
+export type Intensity = 0 | 1 | 2 | 3 | 4;
+
+export interface DailyActivity {
+  date: string;
+  cardsReviewed: number;
+  correctCount: number;
+  durationSec: number;
+  xpEarned: number;
+  intensity: Intensity;
+}
+
+export interface SrsBreakdown {
+  new: number;
+  learning: number;
+  review: number;
+  relearning: number;
+}
+
+export interface WeeklyDay {
+  date: string;
+  accuracyPercent: number | null;
+  xpEarned: number;
+  cardsReviewed: number;
+}
+
 export interface StatsOverview {
   streakCount: number;
   dailyGoalCards: number;
@@ -123,13 +148,19 @@ export interface StatsOverview {
   trackedCards: number;
   retentionRate: number | null;
   totalXp: number;
-  heatmap: Array<{
-    date: string;
-    cardsReviewed: number;
-    correctCount: number;
-    durationSec: number;
-    xpEarned: number;
-  }>;
+  srsBreakdown: SrsBreakdown;
+  heatmap: DailyActivity[];
+  weeklyTrend: {
+    days: WeeklyDay[];
+    totalXp: number;
+    accuracyPercent: number | null;
+  };
+}
+
+export interface ProfileUpdateRequest {
+  name?: string;
+  currentLevel?: CEFRLevel;
+  dailyGoalCards?: number;
 }
 
 export type ScenarioKey = 'job-interview' | 'airport-check-in' | 'cafe-order' | 'technical-meeting' | 'free-talk';

@@ -38,7 +38,11 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
     bodyLimit: 64 * 1024,
   });
 
-  await app.register(cors, { origin: options.corsOrigins });
+  // Varsayılan yöntem listesi PATCH'i içermez; profil güncellemesi için açıkça tanımlanır.
+  await app.register(cors, {
+    origin: options.corsOrigins,
+    methods: ['GET', 'HEAD', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  });
   await app.register(fastifyJwt, { secret: options.jwtSecret });
 
   if (options.rateLimitEnabled) {
