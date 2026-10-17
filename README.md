@@ -58,7 +58,7 @@ npm install                     # tüm workspace'ler
 npm run db:up                   # PostgreSQL (docker compose)
 cp apps/api/.env.example apps/api/.env
 npm run db:migrate              # migrasyonlar
-npm run db:seed                 # 25 temel kelime, phrasal verb ve deyim
+npm run db:seed                 # 6 sistem destesi, 300 kart (apps/api/src/content/vocabulary/)
 ```
 
 ### Çalıştırma
