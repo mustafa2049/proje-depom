@@ -1,0 +1,7 @@
+.expo/
+dist/
+web-build/
+
+# Expo prebuild çıktısı (CNG): app.json'dan her derlemede yeniden üretilir
+/android/
+/ios/

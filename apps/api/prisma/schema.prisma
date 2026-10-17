@@ -1,0 +1,134 @@
+// Prisma şeması — PostgreSQL
+// Migrasyon: npm run db:migrate  |  Seed: npm run db:seed
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum CEFRLevel {
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+}
+
+enum CardStatus {
+  NEW
+  LEARNING
+  REVIEW
+  RELEARNING
+}
+
+model User {
+  id             String          @id @default(uuid())
+  email          String          @unique
+  passwordHash   String
+  name           String
+  currentLevel   CEFRLevel       @default(A2)
+  dailyGoalCards Int             @default(30)
+  streakCount    Int             @default(0)
+  lastStudyDate  DateTime?
+  createdAt      DateTime        @default(now())
+  decks          Deck[]
+  userCards      UserCardSRS[]
+  studySessions  StudySession[]
+  aiChats        AIChatSession[]
+}
+
+model Deck {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  level       CEFRLevel
+  isSystem    Boolean   @default(false)
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cards       Card[]
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+  @@index([level])
+}
+
+model Card {
+  id               String        @id @default(uuid())
+  deckId           String
+  deck             Deck          @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  term             String        // İngilizce kelime veya kalıp
+  phonetic         String?       // Örn: /ɪˌpɪt.ə.mi/
+  partOfSpeech     String        // noun, verb, phrasal verb, idiom
+  translationTR    String        // Türkçe karşılığı
+  definitionEN     String        // İngilizce açıklaması
+  exampleSentence1 String
+  exampleSentence2 String?
+  audioUrl         String?
+  synonyms         String[]
+  userProgress     UserCardSRS[]
+
+  @@index([deckId])
+}
+
+model UserCardSRS {
+  id             String     @id @default(uuid())
+  userId         String
+  cardId         String
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card           Card       @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  status         CardStatus @default(NEW)
+  easeFactor     Float      @default(2.5)  // SM-2 başlangıç katsayısı
+  interval       Int        @default(0)    // Gün cinsinden tekrar aralığı
+  repetitions    Int        @default(0)    // Başarılı tekrar sayısı
+  nextReviewDate DateTime   @default(now())
+  lastReviewedAt DateTime?
+  firstReviewedAt DateTime?              // Kartın ilk kez çalışıldığı an (günlük yeni kart kotası için)
+
+  @@unique([userId, cardId])
+  @@index([userId, nextReviewDate])
+}
+
+model StudySession {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date          DateTime @default(now())
+  cardsReviewed Int      @default(0)
+  correctCount  Int      @default(0)
+  durationSec   Int      @default(0)
+  xpEarned      Int      @default(0)
+
+  @@index([userId, date])
+}
+
+model AIChatSession {
+  id        String          @id @default(uuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenario  String          // Örn: "Job Interview", "Free Talk"
+  level     CEFRLevel
+  createdAt DateTime        @default(now())
+  messages  AIChatMessage[]
+
+  @@index([userId, createdAt])
+}
+
+model AIChatMessage {
+  id                 String        @id @default(uuid())
+  sessionId          String
+  session            AIChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sender             String        // "USER" | "AI"
+  content            String
+  correctedContent   String?       // AI tarafından düzeltilmiş hali
+  grammarExplanation String?       // Hatanın Türkçe açıklaması
+  nativeAlternative  String?       // Daha doğal (native) alternatif
+  replyTranslationTR String?       // AI yanıtının Türkçe çevirisi (yalnızca AI satırlarında)
+  extractedVocabulary Json?        // AI yanıtından çıkarılan kelime/kalıp listesi (yalnızca AI satırlarında)
+  createdAt          DateTime      @default(now())
+
+  @@index([sessionId, createdAt])
+}
