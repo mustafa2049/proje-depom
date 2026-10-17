@@ -104,7 +104,7 @@ Ekranlar aynı `api` nesnesini kullanır; `services/backendSwitch.ts` istekleri 
 
 ## Android APK
 
-Paket adı `com.englishstudy.app`. `app.json` yerel ağdaki `http://` sunucular için `usesCleartextTraffic` açar (`expo-build-properties`) ve APK'yı gerçek telefonlar için `arm64-v8a` ve `armeabi-v7a` mimarilerine derler. `android/` klasörü depoda tutulmaz; her derlemede `expo prebuild` ile `app.json`'dan üretilir.
+Paket adı `com.englishstudy.app`. `app.json` yerel ağdaki `http://` sunucular için `usesCleartextTraffic` açar (`expo-build-properties`) ve APK'yı gerçek telefonlar için `arm64-v8a` ve `armeabi-v7a` mimarilerine derler. Expo'nun varsayılan olarak eklediği gereksiz izinler (harici depolama, `SYSTEM_ALERT_WINDOW`, biyometri) engellenir; APK yalnızca `INTERNET` ve `VIBRATE` ister. `android/` klasörü depoda tutulmaz; her derlemede `expo prebuild` ile `app.json`'dan üretilir.
 
 **Yerel derleme** (Node 20+, JDK 17+, Android SDK):
 
