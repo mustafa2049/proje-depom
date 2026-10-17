@@ -1,5 +1,6 @@
+import { VOCABULARY_DECKS, type VocabularyDeck } from '@proje-depom/shared';
+
 import { getPrisma } from '../src/lib/prisma';
-import { VOCABULARY_DECKS, type VocabularyDeck } from '../src/content/vocabulary';
 
 const prisma = getPrisma();
 

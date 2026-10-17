@@ -2,15 +2,20 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { syncPendingReviews } from '../../services/offlineSync';
+import { useConnectionStore } from '../../store/useConnectionStore';
 import { useStudyStore } from '../../store/useStudyStore';
 import { Button } from '../ui/Button';
 
-/** Bekleyen çevrimdışı değerlendirme varsa görünür; elle senkronizasyon tetikler. */
+/**
+ * Bekleyen çevrimdışı değerlendirme varsa görünür; elle senkronizasyon tetikler.
+ * Sunucusuz modda gizlenir: bekleyenler sunucu hesabına aittir ve sunucuya dönülünce gönderilir.
+ */
 export function SyncBanner() {
   const pending = useStudyStore((state) => state.pendingReviews.length);
+  const isLocal = useConnectionStore((state) => state.mode === 'local');
   const [syncing, setSyncing] = useState(false);
 
-  if (pending === 0) {
+  if (pending === 0 || isLocal) {
     return null;
   }
 

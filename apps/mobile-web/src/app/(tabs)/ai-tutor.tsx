@@ -8,6 +8,7 @@ import { GrammarFeedbackCard } from '../../components/ai/GrammarFeedbackCard';
 import { VocabularyChips } from '../../components/ai/VocabularyChips';
 import { VoiceInputButton } from '../../components/ai/VoiceInputButton';
 import { Button } from '../../components/ui/Button';
+import { useConnectionStore } from '../../store/useConnectionStore';
 import { useTutorStore } from '../../store/useTutorStore';
 import { SCENARIOS } from '../../utils/scenarios';
 import type { ScenarioKey } from '../../types/api';
@@ -27,6 +28,7 @@ export default function AiTutorScreen() {
   const startNewSession = useTutorStore((state) => state.startNewSession);
   const sendMessage = useTutorStore((state) => state.sendMessage);
   const saveVocabulary = useTutorStore((state) => state.saveVocabulary);
+  const isLocal = useConnectionStore((state) => state.mode === 'local');
 
   const [draft, setDraft] = useState('');
   const [showHistory, setShowHistory] = useState(false);
@@ -74,6 +76,12 @@ export default function AiTutorScreen() {
             </Pressable>
           </View>
         </View>
+
+        {isLocal ? (
+          <Text className="px-5 pb-2 text-xs text-muted">
+            Sunucusuz mod: kural tabanlı çevrimdışı eğitmen. Yapay zeka geri bildirimi için sunucuya bağlan.
+          </Text>
+        ) : null}
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerClassName="gap-3 px-5 pb-3">
           {SCENARIOS.map((item) => {

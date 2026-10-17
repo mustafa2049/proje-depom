@@ -3,4 +3,6 @@ export const STORAGE_KEYS = {
   authTokens: 'auth.tokens',
   studyState: 'study.state',
   settings: 'settings',
+  connection: 'connection',
+  localDb: 'local.db',
 } as const;

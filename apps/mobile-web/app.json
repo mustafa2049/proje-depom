@@ -5,6 +5,7 @@
     "scheme": "projedepom",
     "version": "0.1.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0F172A",
     "platforms": [
@@ -12,6 +13,17 @@
       "android",
       "web"
     ],
+    "android": {
+      "package": "com.englishstudy.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F172A"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.englishstudy.app"
+    },
     "web": {
       "bundler": "metro",
       "output": "single",
@@ -24,7 +36,28 @@
           "root": "./src/app"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#0F172A"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true,
+            "buildArchs": [
+              "arm64-v8a",
+              "armeabi-v7a"
+            ]
+          }
+        }
+      ]
     ]
   }
 }

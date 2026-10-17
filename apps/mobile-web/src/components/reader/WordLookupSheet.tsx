@@ -3,8 +3,15 @@ import { Volume2, X } from 'lucide-react-native';
 
 import { speak } from '../../services/ttsService';
 import type { LookupState } from '../../store/useReaderStore';
+import type { LookupResult } from '../../types/api';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
+
+const LOOKUP_SOURCE_LABELS: Record<LookupResult['source'], string> = {
+  DECK: 'Destende mevcut',
+  AI: 'Bağlamsal çeviri',
+  OFFLINE: 'Çevrimdışı sözlük',
+};
 
 interface WordLookupSheetProps {
   lookup: LookupState | null;
@@ -43,7 +50,7 @@ export function WordLookupSheet({ lookup, onClose, onSave }: WordLookupSheetProp
                 <View className="flex-row flex-wrap items-center gap-2">
                   <Badge label={lookup.result.partOfSpeech} tone="accent" />
                   {lookup.result.phonetic ? <Text className="text-sm text-muted">{lookup.result.phonetic}</Text> : null}
-                  <Badge label={lookup.result.source === 'DECK' ? 'Destende mevcut' : 'Bağlamsal çeviri'} tone="muted" />
+                  <Badge label={LOOKUP_SOURCE_LABELS[lookup.result.source]} tone="muted" />
                 </View>
 
                 <Text className="text-2xl font-semibold text-accent">{lookup.result.translationTR}</Text>

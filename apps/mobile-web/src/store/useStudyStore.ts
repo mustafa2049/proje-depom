@@ -16,6 +16,8 @@ import { STORAGE_KEYS } from '../services/appStorageKeys';
 import { appStorage } from '../services/storage';
 import type { CardView, SrsProgress, StudyQueueItem } from '../types/api';
 
+import { isLocalMode } from './useConnectionStore';
+
 /** Bir oturumda getirilecek en fazla kart sayısı. */
 export const SESSION_LIMIT = 30;
 
@@ -296,7 +298,8 @@ export const useStudyStore = create<StudyState>()(
         },
 
         async flushPendingReviews() {
-          if (flushing) {
+          // Bekleyenler sunucu modunda yapılmış değerlendirmelerdir; sunucusuz modda cihaz verisine yazılmaz.
+          if (flushing || isLocalMode()) {
             return;
           }
           flushing = true;

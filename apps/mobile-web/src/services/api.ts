@@ -25,7 +25,8 @@ export interface SessionBridge {
 }
 
 export interface ApiClientOptions {
-  baseUrl: string;
+  /** Sabit adres veya her istekte okunan adres (kullanıcı ayarlarından değişebilir). */
+  baseUrl: string | (() => string);
   session?: SessionBridge;
   /** Varsayılan olarak çalışma anındaki global fetch kullanılır (testlerde stub edilebilir). */
   fetchImpl?: typeof fetch;
@@ -47,7 +48,9 @@ export function createApiClient(options: ApiClientOptions) {
   let refreshing: Promise<boolean> | null = null;
 
   function buildUrl(path: string, query?: RequestOptions['query']): string {
-    const url = new URL(path, options.baseUrl);
+    const baseUrl = typeof options.baseUrl === 'function' ? options.baseUrl() : options.baseUrl;
+    // Adres bir alt yol içerebilir (https://alan/backend); mutlak yol onu ezmesin diye birleştirilir.
+    const url = new URL(`${baseUrl.replace(/\/+$/, '')}${path}`);
     for (const [key, value] of Object.entries(query ?? {})) {
       if (value !== undefined) {
         url.searchParams.set(key, String(value));

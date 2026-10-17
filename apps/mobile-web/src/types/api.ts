@@ -238,7 +238,8 @@ export interface ReadingPassage extends ReadingPassageSummary {
 }
 
 export interface LookupResult {
-  source: 'DECK' | 'AI';
+  /** DECK: destede kart var. AI: sunucu bağlamsal çeviri yaptı. OFFLINE: cihaz içi sözlük (sunucusuz mod). */
+  source: 'DECK' | 'AI' | 'OFFLINE';
   word: string;
   translationTR: string;
   partOfSpeech: string;

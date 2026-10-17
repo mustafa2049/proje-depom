@@ -2,12 +2,16 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { isNetworkError, ApiError } from '../services/api';
-import { api } from '../services/apiClient';
+import { api, localBackend } from '../services/apiClient';
+import { switchBackendMode } from '../services/backendMode';
+import { LOCAL_SESSION_TOKENS } from '../services/local/localBackend';
 import { appStorage } from '../services/storage';
 import { STORAGE_KEYS } from '../services/appStorageKeys';
 import { secureStorage } from '../services/secureStorage';
 import { session } from '../services/session';
 import type { AuthTokens, ProfileUpdateRequest, PublicUser, RegisterRequest } from '../types/api';
+
+import { connectionReady, isLocalMode } from './useConnectionStore';
 
 export interface AuthState {
   user: PublicUser | null;
@@ -19,6 +23,8 @@ export interface AuthState {
   hydrate: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   register: (input: RegisterRequest) => Promise<void>;
+  /** Sunucusuz (çevrimdışı) modu başlatır; cihazdaki yerel profil yoksa oluşturulur. */
+  startOfflineMode: () => Promise<void>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
   updateProfile: (input: ProfileUpdateRequest) => Promise<void>;
@@ -26,6 +32,10 @@ export interface AuthState {
 
 function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : 'Beklenmeyen bir hata oluştu';
+}
+
+function isLocalSession(tokens: AuthTokens): boolean {
+  return tokens.accessToken === LOCAL_SESSION_TOKENS.accessToken;
 }
 
 function parseTokens(raw: string | null): AuthTokens | null {
@@ -49,8 +59,13 @@ export const useAuthStore = create<AuthState>()(
       errorMessage: null,
 
       async hydrate() {
+        await connectionReady();
         const tokens = parseTokens(await secureStorage.getItem(STORAGE_KEYS.authTokens));
-        if (!tokens) {
+        // Yerel oturum yalnızca sunucusuz modda, sunucu oturumu yalnızca sunucu modunda geçerlidir.
+        if (!tokens || isLocalSession(tokens) !== isLocalMode()) {
+          if (tokens) {
+            await secureStorage.removeItem(STORAGE_KEYS.authTokens);
+          }
           set({ isHydrated: true, isAuthenticated: false, user: null });
           return;
         }
@@ -62,6 +77,7 @@ export const useAuthStore = create<AuthState>()(
 
       async login(email, password) {
         set({ isLoading: true, errorMessage: null });
+        switchBackendMode('remote');
         try {
           const response = await api.auth.login(email, password);
           session.set({ accessToken: response.accessToken, refreshToken: response.refreshToken });
@@ -74,10 +90,24 @@ export const useAuthStore = create<AuthState>()(
 
       async register(input) {
         set({ isLoading: true, errorMessage: null });
+        switchBackendMode('remote');
         try {
           const response = await api.auth.register(input);
           session.set({ accessToken: response.accessToken, refreshToken: response.refreshToken });
           set({ user: response.user, isAuthenticated: true, isLoading: false });
+        } catch (error) {
+          set({ isLoading: false, errorMessage: messageOf(error) });
+          throw error;
+        }
+      },
+
+      async startOfflineMode() {
+        set({ isLoading: true, errorMessage: null });
+        switchBackendMode('local');
+        try {
+          const user = await localBackend.ensureUser();
+          session.set({ ...LOCAL_SESSION_TOKENS });
+          set({ user, isAuthenticated: true, isLoading: false });
         } catch (error) {
           set({ isLoading: false, errorMessage: messageOf(error) });
           throw error;

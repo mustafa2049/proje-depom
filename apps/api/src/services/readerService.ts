@@ -1,6 +1,7 @@
 import type { CEFRLevel, PrismaClient } from '@prisma/client';
 
-import { READING_PASSAGES, type ReadingPassage } from '../content/readingPassages';
+import { normalizeWord, READING_PASSAGES, type ReadingPassage } from '@proje-depom/shared';
+
 import { NotFoundError, ValidationError } from '../lib/errors';
 
 import { buildWordLookupPrompt } from './aiPrompts';
@@ -34,14 +35,7 @@ export function getPassage(id: string): ReadingPassage {
   return passage;
 }
 
-/** Kelimeyi karşılaştırma için normalize eder: boşlukları ve kenar noktalamayı temizler, küçük harfe çevirir. */
-export function normalizeWord(raw: string): string {
-  return raw
-    .normalize('NFC')
-    .trim()
-    .toLowerCase()
-    .replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
-}
+export { normalizeWord };
 
 export interface LookupInput {
   word: string;

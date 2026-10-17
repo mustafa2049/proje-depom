@@ -4,6 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Flame, LogOut } from 'lucide-react-native';
 
+import { ApiUrlSetting } from '../../components/settings/ApiUrlSetting';
 import { ActivityHeatmap } from '../../components/stats/ActivityHeatmap';
 import { SRSBreakdownCard } from '../../components/stats/SRSBreakdownCard';
 import { Badge } from '../../components/ui/Badge';
@@ -12,6 +13,7 @@ import { Chip } from '../../components/ui/Chip';
 import { SegmentedControl } from '../../components/ui/SegmentedControl';
 import { TextField } from '../../components/ui/TextField';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useConnectionStore } from '../../store/useConnectionStore';
 import { useSettingsStore, type Accent } from '../../store/useSettingsStore';
 import { useStatsStore } from '../../store/useStatsStore';
 import type { CEFRLevel } from '../../types/api';
@@ -29,6 +31,8 @@ export default function ProfileScreen() {
   const user = useAuthStore((state) => state.user);
   const updateProfile = useAuthStore((state) => state.updateProfile);
   const logout = useAuthStore((state) => state.logout);
+  const mode = useConnectionStore((state) => state.mode);
+  const apiUrl = useConnectionStore((state) => state.apiUrl);
   const accent = useSettingsStore((state) => state.accent);
   const setAccent = useSettingsStore((state) => state.setAccent);
   const overview = useStatsStore((state) => state.overview);
@@ -149,6 +153,19 @@ export default function ProfileScreen() {
           {saveError ? <Text className="text-sm text-danger">{saveError}</Text> : null}
 
           <Button title="Ayarları Kaydet" onPress={() => void save()} loading={saving} testID="profile-save" />
+        </View>
+
+        <View className="gap-4 rounded-2xl border border-slate-700 bg-surface p-5" testID="connection-settings">
+          <Text className="text-lg font-semibold text-white">Bağlantı</Text>
+          {mode === 'local' ? (
+            <Text className="text-sm text-muted">
+              Sunucusuz moddasın: tüm veriler bu cihazda saklanıyor. Sunucuya bağlanmak için adresi kaydedip çıkış yap ve
+              e-posta ile giriş yap.
+            </Text>
+          ) : (
+            <Text className="text-sm text-muted">Sunucuya bağlısın: {apiUrl}</Text>
+          )}
+          <ApiUrlSetting />
         </View>
 
         <Pressable accessibilityRole="button" accessibilityLabel="Çıkış yap" onPress={signOut} className="flex-row items-center justify-center gap-2 py-3">

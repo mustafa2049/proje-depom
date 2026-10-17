@@ -1,4 +1,4 @@
-import type { CEFRLevel } from '@prisma/client';
+import type { CefrLevel as CEFRLevel } from '../types';
 
 export interface WordOrderItem {
   level: CEFRLevel;

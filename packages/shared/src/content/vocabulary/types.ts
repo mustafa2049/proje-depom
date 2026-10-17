@@ -1,5 +1,6 @@
-/** Seed verisindeki CEFR seviyeleri; Prisma `CEFRLevel` enum'uyla birebir aynıdır. */
-export type CefrLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+import type { CefrLevel } from '../../types';
+
+export type { CefrLevel };
 
 export interface VocabularyCard {
   /** Kalıcı kimlik: kart kimliği `seed-card-{slug}` olur. Yeniden adlandırılırsa SRS ilerlemesi kaybolur. */

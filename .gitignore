@@ -25,3 +25,9 @@ npm-debug.log*
 .idea/
 test-results/
 playwright-report/
+
+# Android derleme çıktıları ve imza anahtarları
+*.apk
+*.aab
+*.keystore
+*.jks
