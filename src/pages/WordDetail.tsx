@@ -5,7 +5,7 @@ import { useToast } from '../components/Toast';
 import { BoxStrip, cx, EmptyState, Highlight, Icon, SpeakButton } from '../components/ui';
 import { getDeck } from '../data/decks';
 import { POS_LABELS } from '../data/words';
-import { BOX_COLORS, BOX_INTERVALS, dueLabel, nextBox } from '../lib/leitner';
+import { BOX_COLORS, dueLabel, nextBox, previewInterval } from '../lib/leitner';
 import type { ReviewOutcome } from '../lib/types';
 import { useStore } from '../store/AppStore';
 
@@ -31,10 +31,11 @@ export default function WordDetail() {
   const knowBox = nextBox(card?.box ?? 0, 'know');
 
   const rate = (outcome: ReviewOutcome) => {
-    dispatch({ type: 'review', wordId: word.id, outcome });
     const to = nextBox(card?.box ?? 0, outcome);
+    const days = previewInterval(card, outcome, state.profile.smartIntervals);
+    dispatch({ type: 'review', wordId: word.id, outcome });
     toast(outcome === 'forgot' ? 'Kutu 1’e taşındı' : `Kutu ${to}’e taşındı`, {
-      description: outcome === 'forgot' ? 'Yarın tekrar sorulacak.' : `${BOX_INTERVALS[to]} gün sonra tekrar edilecek.`,
+      description: outcome === 'forgot' ? 'Yarın tekrar sorulacak.' : `${days} gün sonra tekrar edilecek.`,
       tone: outcome === 'forgot' ? 'info' : 'success',
     });
   };
@@ -190,7 +191,7 @@ export default function WordDetail() {
               <span className="font-label-md text-label-md font-bold">Biliyorum</span>
             </div>
             <span className="font-label-sm text-label-sm text-on-surface-variant group-hover:text-secondary transition-colors">
-              Kutu {knowBox} (+{BOX_INTERVALS[knowBox]} Gün)
+              Kutu {knowBox} (+{previewInterval(card, 'know', state.profile.smartIntervals)} Gün)
             </span>
           </button>
         </div>

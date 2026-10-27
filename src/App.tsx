@@ -4,7 +4,10 @@ import { ToastProvider } from './components/Toast';
 import { Icon } from './components/ui';
 import Dashboard from './pages/Dashboard';
 import Learn from './pages/Learn';
-import { AppStoreProvider } from './store/AppStore';
+import { dayKey } from './lib/leitner';
+import { cancelReminders, remindersSupported, scheduleReminders } from './lib/reminders';
+import { AppStoreProvider, useStore } from './store/AppStore';
+import { dailyPlan, streak } from './store/selectors';
 
 const StudySession = lazy(() => import('./pages/StudySession'));
 const SessionSummary = lazy(() => import('./pages/SessionSummary'));
@@ -34,6 +37,23 @@ function ScrollToTop() {
   return null;
 }
 
+/** Hatırlatma bildirimlerini güncel seri ve kart sayısıyla senkron tutar (yalnızca Android). */
+function ReminderSync() {
+  const { state } = useStore();
+  const { enabled, hour, minute } = state.profile.reminder;
+  const studiedToday = (state.history[dayKey()]?.reviews ?? 0) > 0;
+  const s = streak(state);
+  const due = dailyPlan(state).dueIds.length;
+  useEffect(() => {
+    if (!remindersSupported()) return;
+    const run = enabled ? scheduleReminders({ hour, minute, studiedToday, streak: s, dueCount: due }) : cancelReminders();
+    run.catch(() => {
+      // Bildirim servisi kullanılamıyorsa uygulama normal çalışmaya devam eder.
+    });
+  }, [enabled, hour, minute, studiedToday, s, due]);
+  return null;
+}
+
 function Loading() {
   return (
     <div className="min-h-screen flex items-center justify-center text-primary">
@@ -46,6 +66,7 @@ export default function App() {
   return (
     <AppStoreProvider>
       <ToastProvider>
+        <ReminderSync />
         <HashRouter>
           <ScrollToTop />
           <Suspense fallback={<Loading />}>

@@ -55,6 +55,8 @@ export interface CardState {
   correct: number;
   lastReviewed: number;
   addedAt: number;
+  /** Kişisel kolaylık çarpanı (akıllı aralıklar): 0.7 zor … 1.5 kolay. Yoksa 1. */
+  ease?: number;
 }
 
 export type ReviewOutcome = 'forgot' | 'know' | 'easy';
@@ -98,7 +100,17 @@ export interface Profile {
   ttsRate: number;
   createdAt: number;
   xp: number;
+  /** Kartın hangi yüzünün sorulacağı */
+  cardDirection: CardDirection;
+  /** Cevabı yazarak kontrol etme modu */
+  typeAnswer: boolean;
+  /** Kolaylık çarpanına göre uyarlanan tekrar aralıkları */
+  smartIntervals: boolean;
+  /** Günlük hatırlatma bildirimi (yalnızca Android) */
+  reminder: { enabled: boolean; hour: number; minute: number };
 }
+
+export type CardDirection = 'en-tr' | 'tr-en' | 'mixed';
 
 /** Mikro hikaye: paragraflarda [[kelimeId]] veya [[kelimeId|metindeki hali]] işaretleri bulunur. */
 export interface StoryData {

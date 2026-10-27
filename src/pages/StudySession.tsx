@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Flashcard, type SwipeDirection } from '../components/Flashcard';
 import { EmptyState, cx, Icon, PrimaryButton, ProgressBar, BoxStrip } from '../components/ui';
-import { BOX_INTERVALS, nextBox } from '../lib/leitner';
+import { checkAnswer, type AnswerVerdict } from '../lib/answer';
+import { nextBox, previewInterval } from '../lib/leitner';
 import { vibrate } from '../lib/speech';
 import type { ReviewOutcome, SessionMove } from '../lib/types';
 import { useStore } from '../store/AppStore';
@@ -30,6 +31,8 @@ export default function StudySession() {
 
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
+  const [typed, setTyped] = useState('');
+  const [verdict, setVerdict] = useState<AnswerVerdict | null>(null);
   const [exiting, setExiting] = useState<SwipeDirection | null>(null);
   const moves = useRef<SessionMove[]>([]);
   const startedAt = useRef(Date.now());
@@ -75,6 +78,8 @@ export default function StudySession() {
       setTimeout(() => {
         setExiting(null);
         setFlipped(false);
+        setTyped('');
+        setVerdict(null);
         if (index + 1 >= queue.length) finish();
         else setIndex((i) => i + 1);
       }, 280);
@@ -97,6 +102,17 @@ export default function StudySession() {
   }, [rate]);
 
   const knowTarget = useMemo(() => nextBox(card?.box ?? 0, 'know'), [card]);
+  // Kart yönü: karışık modda kartların yarısı ters sorulur (oturum boyunca sabit)
+  const direction = state.profile.cardDirection;
+  const reverse = direction === 'tr-en' || (direction === 'mixed' && (index * 7 + (wordId?.length ?? 0)) % 2 === 1);
+  const typeMode = state.profile.typeAnswer;
+  const submitTyped = () => {
+    if (!word || !typed.trim()) return;
+    const v = checkAnswer(typed, word, reverse);
+    setVerdict(v);
+    setFlipped(true);
+    vibrate(v === 'wrong' ? 80 : 30);
+  };
 
   if (!queue.length || !word) {
     return (
@@ -173,12 +189,50 @@ export default function StudySession() {
         onFlip={() => setFlipped((f) => !f)}
         onSwipe={(dir) => rate(dir === 'right' ? 'know' : 'forgot')}
         exiting={exiting}
+        reverse={reverse}
       />
 
-      <div className="flex items-center justify-center gap-2 py-1 text-outline font-label-sm text-label-sm">
-        <Icon name="swipe" size={16} />
-        <span>Sağa/sola kaydırın veya aşağıdaki butonları kullanın</span>
-      </div>
+      {typeMode && !flipped ? (
+        <form
+          className="flex gap-2 py-1"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submitTyped();
+          }}
+        >
+          <input
+            aria-label={reverse ? 'İngilizcesini yaz' : 'Türkçe anlamını yaz'}
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            placeholder={reverse ? 'İngilizcesini yaz…' : 'Türkçe anlamını yaz…'}
+            autoComplete="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            lang={reverse ? 'en' : 'tr'}
+            className="flex-1 h-12 px-4 rounded-xl bg-surface-container-high text-on-surface font-body-md text-body-md outline-none focus:ring-1 focus:ring-primary placeholder:text-outline"
+          />
+          <button type="submit" disabled={!typed.trim()} className="h-12 px-4 rounded-xl bg-primary text-on-primary font-label-lg text-label-lg disabled:opacity-40">
+            Kontrol
+          </button>
+        </form>
+      ) : verdict ? (
+        <div
+          className={cx(
+            'flex items-center gap-2 px-3 py-2 rounded-xl font-label-md text-label-md',
+            verdict === 'correct' ? 'bg-secondary-container/30 text-secondary' : verdict === 'close' ? 'bg-tertiary-container/30 text-tertiary' : 'bg-error-container/30 text-error',
+          )}
+        >
+          <Icon name={verdict === 'correct' ? 'check_circle' : verdict === 'close' ? 'spellcheck' : 'cancel'} size={18} />
+          <span>
+            {verdict === 'correct' ? 'Doğru! “Biliyorum”a bas.' : verdict === 'close' ? `Neredeyse — küçük bir yazım hatası. Senin cevabın: “${typed}”` : `Yanlış. Senin cevabın: “${typed}”`}
+          </span>
+        </div>
+      ) : (
+        <div className="flex items-center justify-center gap-2 py-1 text-outline font-label-sm text-label-sm">
+          <Icon name="swipe" size={16} />
+          <span>Sağa/sola kaydırın veya aşağıdaki butonları kullanın</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-2.5 pt-2 pb-3 mt-auto">
         <button
@@ -213,7 +267,7 @@ export default function StudySession() {
             <Icon name="arrow_forward" size={18} className="text-secondary group-hover:translate-x-0.5 transition-transform" />
           </div>
           <span className={cx('font-label-sm text-[11px] text-secondary/80 leading-tight')}>
-            Kutu {knowTarget} (+{BOX_INTERVALS[knowTarget]} Gün)
+            Kutu {knowTarget} (+{previewInterval(card, 'know', state.profile.smartIntervals)} Gün)
           </span>
         </button>
       </div>

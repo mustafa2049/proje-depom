@@ -15,6 +15,7 @@ export function Flashcard({
   onFlip,
   onSwipe,
   exiting,
+  reverse = false,
 }: {
   word: Word;
   card?: CardState;
@@ -22,6 +23,8 @@ export function Flashcard({
   onFlip: () => void;
   onSwipe?: (dir: SwipeDirection) => void;
   exiting?: SwipeDirection | null;
+  /** Türkçe → İngilizce: ön yüzde anlam sorulur, arka yüzde kelime gösterilir */
+  reverse?: boolean;
 }) {
   const start = useRef<{ x: number; y: number } | null>(null);
   const [dx, setDx] = useState(0);
@@ -91,15 +94,30 @@ export function Flashcard({
               <span>Yeni Kelime</span>
             </div>
           )}
-          <SpeakButton
-            text={word.word}
-            label="Dinle"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-high text-primary hover:bg-surface-bright"
-          />
+          {/* Ters kartta telaffuz ön yüzde cevabı ele verir; yalnızca arka yüzde gösterilir */}
+          {(!reverse || flipped) && (
+            <SpeakButton
+              text={word.word}
+              label="Dinle"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-high text-primary hover:bg-surface-bright"
+            />
+          )}
         </div>
 
         <div className="flex flex-col items-center justify-center text-center my-auto py-space-sm relative z-10 w-full">
-          {!flipped ? (
+          {!flipped && reverse ? (
+            <div className="flex flex-col items-center gap-2 animate-fade-in">
+              <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-tertiary-container/30 text-tertiary font-label-sm text-label-sm tracking-wide">
+                {pos.tr.toLocaleUpperCase('tr')} • {word.cefr} • İNGİLİZCESİ NE?
+              </div>
+              <h2 className="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold mt-1 break-words max-w-full">{word.meaning}</h2>
+              {example?.tr && <p className="font-body-sm text-body-sm text-on-surface-variant italic max-w-xs">“{example.tr}”</p>}
+              <div className="mt-4 flex items-center gap-1 text-outline font-label-sm text-label-sm">
+                <Icon name="touch_app" size={16} />
+                <span>İngilizcesini düşün, sonra kartı çevir</span>
+              </div>
+            </div>
+          ) : !flipped ? (
             <div className="flex flex-col items-center gap-2 animate-fade-in">
               <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed-dim font-label-sm text-label-sm tracking-wide">
                 {pos.tr.toLocaleUpperCase('tr')} / {pos.en.toUpperCase()} • {word.cefr}
@@ -116,11 +134,24 @@ export function Flashcard({
           ) : (
             <div className="flex flex-col items-center gap-3 w-full text-left animate-fade-in">
               <div className="w-full text-center pb-1">
-                <span className="font-label-sm text-label-sm uppercase tracking-widest text-secondary font-bold block mb-1">Türkçe Karşılık</span>
-                <h3 className="font-headline-md text-headline-md text-secondary font-bold">{word.meaning || '—'}</h3>
-                <p className="font-label-md text-label-md text-on-surface-variant mt-1">
-                  {word.word} {word.ipa && <span className="font-mono">{word.ipa}</span>}
-                </p>
+                {reverse ? (
+                  <>
+                    <span className="font-label-sm text-label-sm uppercase tracking-widest text-secondary font-bold block mb-1">İngilizcesi</span>
+                    <h3 lang="en" className="font-headline-lg text-headline-lg text-secondary font-bold uppercase break-words">{word.word}</h3>
+                    <p className="font-label-md text-label-md text-on-surface-variant mt-1">
+                      {word.ipa && <span className="font-mono">{word.ipa} • </span>}
+                      {word.meaning}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <span className="font-label-sm text-label-sm uppercase tracking-widest text-secondary font-bold block mb-1">Türkçe Karşılık</span>
+                    <h3 className="font-headline-md text-headline-md text-secondary font-bold">{word.meaning || '—'}</h3>
+                    <p className="font-label-md text-label-md text-on-surface-variant mt-1">
+                      {word.word} {word.ipa && <span className="font-mono">{word.ipa}</span>}
+                    </p>
+                  </>
+                )}
               </div>
               {example && (
                 <div className="w-full p-3 rounded-lg bg-surface-container-high/80 flex flex-col gap-1">

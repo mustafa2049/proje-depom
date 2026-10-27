@@ -47,6 +47,16 @@ Yönlendirme `#/` tabanlı olduğu için ek sunucu ayarı gerekmez.
 - **Biliyorum** → bir üst kutu, **Çok Kolay** → Kutu 5, **Unuttum** → Kutu 1.
 - Arka arkaya 4 kez unutulan kelimeler **İnatçı Kelimeler Kliniği**ne düşer.
 - Günlük plan: önce vadesi gelen tekrarlar, sonra günlük kota kadar yeni kelime (Profil → Ayarlar).
+- **Akıllı tekrar aralıkları** (varsayılan açık): her kartın 0.7–1.5 arası bir kolaylık çarpanı vardır.
+  Çok Kolay +0.15, Biliyorum +0.05, Unuttum −0.2; Kutu 2–5 aralığı bu çarpanla ölçeklenir (Kutu 1 hep 1 gün).
+  Kapatılırsa klasik Leitner aralıkları kullanılır.
+
+**Kart çalışma ayarları** (Profil → Ayarlar → Kart Çalışma):
+
+- **Kartın soru yüzü:** İng → Tür, Tür → İng (ters kart) veya Karışık.
+- **Yazarak cevapla:** Kart çevrilmeden önce cevap yazılır; büyük/küçük harf, noktalama, Türkçe karakter
+  (ç→c, ı→i…) ve kelime uzunluğuna göre 1–2 harflik yazım hatası tolere edilir.
+- **Günlük hatırlatma** (yalnızca Android): seçilen saatte bildirim; o gün çalışıldıysa bildirim gelmez.
 
 ## Ekranlar
 

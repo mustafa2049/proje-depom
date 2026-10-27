@@ -37,6 +37,10 @@ export function createInitialState(now = Date.now()): AppState {
       ttsRate: 0.9,
       createdAt: now,
       xp: 0,
+      cardDirection: 'en-tr',
+      typeAnswer: false,
+      smartIntervals: true,
+      reminder: { enabled: false, hour: 20, minute: 0 },
     },
     cards: {},
     customWords: [],
@@ -99,7 +103,7 @@ export function reducer(state: AppState, action: Action): AppState {
     case 'review': {
       const now = action.now ?? Date.now();
       const prev = state.cards[action.wordId];
-      const card = applyReview(prev, action.wordId, action.outcome, now);
+      const card = applyReview(prev, action.wordId, action.outcome, now, state.profile.smartIntervals);
       const correct = action.outcome !== 'forgot';
       const next: AppState = {
         ...state,

@@ -82,20 +82,44 @@ export function newCard(wordId: string, box: BoxNumber, now = Date.now()): CardS
 }
 
 /** Kartı Leitner kuralına göre günceller. */
+export const EASE_MIN = 0.7;
+export const EASE_MAX = 1.5;
+
+/** Değerlendirme sonrası kolaylık çarpanı: kolay kartlar seyrekleşir, zorlananlar sıklaşır. */
+export function nextEase(ease: number | undefined, outcome: ReviewOutcome): number {
+  const e = ease ?? 1;
+  const delta = outcome === 'easy' ? 0.15 : outcome === 'know' ? 0.05 : -0.2;
+  return Math.round(Math.min(EASE_MAX, Math.max(EASE_MIN, e + delta)) * 100) / 100;
+}
+
+/** Kutu aralığının kolaylık çarpanıyla ayarlanmış hali (Kutu 1 her zaman 1 gün). */
+export function intervalDays(box: BoxNumber, ease = 1, smart = true): number {
+  if (box === 1 || !smart) return BOX_INTERVALS[box];
+  return Math.max(1, Math.round(BOX_INTERVALS[box] * ease));
+}
+
+/** "Biliyorum" denirse kartın kaç gün sonra sorulacağı (butonlarda gösterilir). */
+export function previewInterval(card: CardState | undefined, outcome: ReviewOutcome, smart = true): number {
+  return intervalDays(nextBox(card?.box ?? 0, outcome), nextEase(card?.ease, outcome), smart);
+}
+
 export function applyReview(
   card: CardState | undefined,
   wordId: string,
   outcome: ReviewOutcome,
   now = Date.now(),
+  smart = true,
 ): CardState {
   const from = card?.box ?? 0;
   const box = nextBox(from, outcome);
   const base = card ?? newCard(wordId, 1, now);
   const forgot = outcome === 'forgot';
+  const ease = nextEase(base.ease, outcome);
   return {
     ...base,
     box,
-    dueDay: dayIndex(now) + BOX_INTERVALS[box],
+    ease,
+    dueDay: dayIndex(now) + intervalDays(box, ease, smart),
     lapses: base.lapses + (forgot ? 1 : 0),
     failStreak: forgot ? base.failStreak + 1 : 0,
     reviews: base.reviews + 1,

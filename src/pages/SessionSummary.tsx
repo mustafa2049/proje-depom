@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { SubScreen } from '../components/Layout';
 import { EmptyState, Icon, PrimaryButton, SpeakButton, cx } from '../components/ui';
-import { BOX_INTERVALS, dayKey } from '../lib/leitner';
+import { BOX_INTERVALS, dayIndex, dayKey } from '../lib/leitner';
 import type { BoxNumber, SessionMove } from '../lib/types';
 import { useStore } from '../store/AppStore';
 import { streak } from '../store/selectors';
@@ -11,14 +11,16 @@ interface Group {
   from: BoxNumber | 0;
   to: BoxNumber;
   count: number;
+  ids: string[];
 }
 
 function groupMoves(moves: SessionMove[]): Group[] {
   const map = new Map<string, Group>();
   for (const m of moves) {
     const key = `${m.from}-${m.to}`;
-    const g = map.get(key) ?? { key, from: m.from, to: m.to, count: 0 };
+    const g = map.get(key) ?? { key, from: m.from, to: m.to, count: 0, ids: [] };
     g.count++;
+    g.ids.push(m.wordId);
     map.set(key, g);
   }
   return [...map.values()].sort((a, b) => b.to - a.to);
@@ -146,7 +148,9 @@ export default function SessionSummary() {
           {groupMoves(session.moves).map((g) => {
             const failed = g.to === 1;
             const stayed = failed && g.from === 1;
-            const days = BOX_INTERVALS[g.to];
+            // Akıllı aralıklarda kartlar farklı günlere düşebilir; grubun ortalamasını göster
+            const dues = g.ids.map((id) => state.cards[id]?.dueDay).filter((d): d is number => d !== undefined);
+            const days = dues.length ? Math.max(1, Math.round(dues.reduce((a, b) => a + b, 0) / dues.length - dayIndex(session.finishedAt))) : BOX_INTERVALS[g.to];
             return (
               <div key={g.key} className="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-high">
                 <div className="flex items-center gap-space-sm min-w-0">

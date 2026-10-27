@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { SubScreen } from '../components/Layout';
 import { AiSettings } from '../components/AiSettings';
 import { Sheet } from '../components/Sheet';
+import { StudySettings } from '../components/StudySettings';
 import { useToast } from '../components/Toast';
 import { cx, Icon } from '../components/ui';
 import { exportAnki, exportBackup } from '../lib/exporters';
@@ -414,6 +415,7 @@ export default function Profile() {
             aria-label="Telaffuz hızı"
           />
         </div>
+        <StudySettings />
         <AiSettings />
         <button
           type="button"

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyReview, computeStreak, dayIndex, dayKey, isDue, isLeech, LEECH_THRESHOLD, longestStreak, newCard, nextBox } from '../lib/leitner';
+import { applyReview, computeStreak, dayIndex, dayKey, EASE_MAX, EASE_MIN, intervalDays, isDue, isLeech, LEECH_THRESHOLD, longestStreak, newCard, nextBox, nextEase } from '../lib/leitner';
 
 const DAY = 86_400_000;
 const now = new Date(2026, 9, 27, 10, 0).getTime();
@@ -66,5 +66,27 @@ describe('seri hesabı', () => {
   });
   it('en uzun seriyi bulur', () => {
     expect(longestStreak(h([0, 1, 5, 6, 7, 8]))).toBe(4);
+  });
+});
+
+describe('akıllı aralıklar', () => {
+  it('kolaylık çarpanı sınırlar içinde kalır', () => {
+    let e: number | undefined;
+    for (let i = 0; i < 20; i++) e = nextEase(e, 'easy');
+    expect(e).toBe(EASE_MAX);
+    for (let i = 0; i < 20; i++) e = nextEase(e, 'forgot');
+    expect(e).toBe(EASE_MIN);
+  });
+  it('Kutu 1 hep 1 gün; kapalıyken klasik Leitner aralıkları kullanılır', () => {
+    expect(intervalDays(1, 1.5)).toBe(1);
+    expect(intervalDays(4, 1.5)).toBe(21);
+    expect(intervalDays(4, 0.7)).toBe(10);
+    expect(intervalDays(4, 1.5, false)).toBe(14);
+  });
+  it('zorlanılan kart aynı kutuda daha erken gelir', () => {
+    const hard = applyReview({ ...newCard('x', 3, now), ease: 0.8 }, 'x', 'know', now);
+    const plain = applyReview(newCard('x', 3, now), 'x', 'know', now, false);
+    expect(hard.box).toBe(4);
+    expect(hard.dueDay - dayIndex(now)).toBeLessThan(plain.dueDay - dayIndex(now));
   });
 });
