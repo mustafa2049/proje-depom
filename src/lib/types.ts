@@ -10,7 +10,8 @@ export type PartOfSpeech =
   | 'phrasal'
   | 'idiom'
   | 'phrase'
-  | 'conjunction';
+  | 'conjunction'
+  | 'preposition';
 
 export interface Example {
   en: string;

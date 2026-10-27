@@ -86,13 +86,99 @@ export function findWordId(token: string, ids: Record<string, unknown>): string 
   return null;
 }
 
+/** Sık kullanılan düzensiz fiillerin geçmiş zaman ve -s/-ing biçimleri. */
+const IRREGULAR: Record<string, string[]> = {
+  be: ['am', 'is', 'are', 'was', 'were', 'been', 'being'],
+  break: ['broke', 'broken'],
+  bring: ['brought'],
+  build: ['built'],
+  buy: ['bought'],
+  catch: ['caught'],
+  choose: ['chose', 'chosen'],
+  come: ['came'],
+  cost: ['cost'],
+  cut: ['cut'],
+  do: ['did', 'done', 'does'],
+  drink: ['drank', 'drunk'],
+  drive: ['drove', 'driven'],
+  eat: ['ate', 'eaten'],
+  fall: ['fell', 'fallen'],
+  feel: ['felt'],
+  find: ['found'],
+  fly: ['flew', 'flown', 'flies'],
+  forget: ['forgot', 'forgotten'],
+  forgive: ['forgave', 'forgiven'],
+  get: ['got', 'gotten', 'getting'],
+  give: ['gave', 'given'],
+  go: ['went', 'gone', 'goes'],
+  grow: ['grew', 'grown'],
+  hang: ['hung'],
+  have: ['had', 'has'],
+  hide: ['hid', 'hidden'],
+  hit: ['hit', 'hitting'],
+  hold: ['held'],
+  keep: ['kept'],
+  know: ['knew', 'known'],
+  lead: ['led'],
+  leave: ['left'],
+  lend: ['lent'],
+  lose: ['lost'],
+  make: ['made'],
+  meet: ['met'],
+  pay: ['paid'],
+  put: ['put', 'putting'],
+  run: ['ran', 'running'],
+  say: ['said'],
+  see: ['saw', 'seen'],
+  sell: ['sold'],
+  send: ['sent'],
+  set: ['set', 'setting'],
+  shut: ['shut', 'shutting'],
+  sit: ['sat', 'sitting'],
+  sleep: ['slept'],
+  speak: ['spoke', 'spoken'],
+  spend: ['spent'],
+  stand: ['stood'],
+  steal: ['stole', 'stolen'],
+  swim: ['swam', 'swum', 'swimming'],
+  take: ['took', 'taken'],
+  teach: ['taught'],
+  tell: ['told'],
+  think: ['thought'],
+  throw: ['threw', 'thrown'],
+  understand: ['understood'],
+  wake: ['woke', 'woken'],
+  wear: ['wore', 'worn'],
+  win: ['won', 'winning'],
+  write: ['wrote', 'written'],
+};
+
+const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Bir kelimenin çekimli hâllerini yakalayan düzenli ifade parçası. */
+function inflections(word: string): string {
+  const w = esc(word.toLowerCase());
+  const stem = w.replace(/e$/, '');
+  const forms = [`${w}`, `${stem}(?:s|es|ed|d|ing|ly)`];
+  if (/y$/.test(w)) forms.push(`${w.slice(0, -1)}(?:ies|ied)`);
+  // Ünsüz ikizleşmesi: stop → stopped, plan → planning, cancel → cancelled
+  if (/[^aeiou][aeiou][bdglmnprt]$/.test(w)) forms.push(`${w}${w.slice(-1)}(?:ed|ing)`);
+  for (const f of IRREGULAR[word.toLowerCase()] ?? []) forms.push(esc(f));
+  return `(?:${forms.join('|')})`;
+}
+
+/**
+ * Cümlede hedef kelimeyi bulur ve parçalara ayırır. Çekim eklerini (-s, -ed, -ing),
+ * düzensiz fiilleri ("make" → "made") ve deyimlerde ilk kelimenin çekimini ("run into" → "ran into") tanır.
+ */
 export function splitByTerm(text: string, term: string): { text: string; match: boolean }[] {
   const t = term.trim();
   if (!t) return [{ text, match: false }];
-  const escaped = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  // "run into" → "ran into" gibi düzensiz çekimleri yakalamak zor; ek toleransı: -s, -ed, -ing, -d, -es
-  const stem = escaped.replace(/e$/, '');
-  const re = new RegExp(`\\b(${escaped}|${stem}(?:s|es|ed|d|ing|ly)?)\\b`, 'gi');
+  const parts = t.split(/\s+/);
+  // Çok kelimeli ifadelerde ilk kelime çekimlenebilir, son kelime çoğul olabilir ("utility bills").
+  const rest = parts.slice(1).map((p, i, arr) => (i === arr.length - 1 ? `${esc(p)}(?:s|es)?` : esc(p)));
+  const pattern = parts.length === 1 ? inflections(parts[0]) : `${inflections(parts[0])}\\s+${rest.join('\\s+')}`;
+  const re = new RegExp(`\\b${pattern}\\b`, 'gi');
   const out: { text: string; match: boolean }[] = [];
   let last = 0;
   for (const m of text.matchAll(re)) {

@@ -55,7 +55,7 @@ Yönlendirme `#/` tabanlı olduğu için ek sunucu ayarı gerekmez.
 | Ana Sayfa | Günlük plan, Leitner dağılımı, hızlı modüller, inatçı kelime uyarısı |
 | Öğren | Kart oturumu (dokun-çevir, kaydır, klavye: Boşluk / ← / ↑ / →), oturum özeti, aktif desteler |
 | Pratik | 12 modül (aşağıda) |
-| Kütüphane | Desteler, arama, CEFR filtresi, hızlı kelime ekleme |
+| Kütüphane | 14 deste, 1000+ kelime, arama, CEFR filtresi, hızlı kelime ekleme |
 | Kendi Kelimeni Ekle | Otomatik doldurma, kamera ile metin tarama (OCR), altyazı (.srt/.vtt) analizi |
 | Profil | İstatistikler, haftalık harita, başarımlar, ayarlar, JSON yedek / Anki dışa aktarma |
 
@@ -74,6 +74,22 @@ Eller Serbest Sesli Mod · Kelime Kökü & Aile Ağacı · İnatçı Kelimeler K
 - OCR, [Tesseract.js](https://tesseract.projectnaptha.com) ile cihazda çalışır; ilk kullanımda dil verisi indirilir.
 - Mikro yazma analizi kural tabanlıdır (yapay zekâ servisi kullanılmaz): hedef kelime tespiti, büyük harf/noktalama,
   Türkçe kaynaklı kalıp hataları ("do a decision" vb.) ve üst seviye kelime önerileri.
+
+## Sözlük
+
+1000'den fazla kelime, 14 deste: Çekirdek (A1–B1), Akademik, İş İngilizcesi, Günlük Konuşma & Deyimler,
+Sitcom, Seyahat, Yemek, Sağlık, Teknoloji, Duygular & Kişilik, Ev & Günlük Yaşam, Doğa & Çevre, Phrasal Verbs.
+Her kelimede IPA okunuşu, Türkçe anlam, CEFR seviyesi ve çevirili örnek cümle bulunur.
+
+Yeni kelime eklemek için `src/data/vocab/` altındaki dosyalara satır başına bir kelime yazılır:
+
+```
+kelime | /ipa/ | tür | CEFR | Türkçe anlam | Örnek cümle | Örnek çevirisi | eş anlamlılar (;) | kalıplar (;)
+```
+
+Tür kodları: `n` isim, `v` fiil, `adj` sıfat, `adv` zarf, `pv` phrasal verb, `idm` deyim, `phr` kalıp,
+`conj` bağlaç, `prep` edat. `npm test` yinelenen kelimeleri, eksik çevirileri ve örnek cümlenin kelimeyi
+içerip içermediğini otomatik denetler.
 
 ## Klasör yapısı
 

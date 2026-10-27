@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SEED_WORDS } from '../data/words';
+import { DECKS } from '../data/decks';
+import { splitByTerm } from '../lib/text';
 import { dayIndex, dayKey } from '../lib/leitner';
 import { allWords, boxCounts, dailyPlan, leeches, wordMap } from '../store/selectors';
 import { createInitialState, migrate, reducer } from '../store/state';
@@ -13,8 +15,16 @@ describe('tohum sözlük', () => {
     for (const w of SEED_WORDS) {
       expect(w.meaning.length, w.id).toBeGreaterThan(0);
       expect(w.examples.length, w.id).toBeGreaterThan(0);
-      expect(w.ipa.startsWith('/'), w.id).toBe(true);
+      expect(w.ipa.startsWith('/') && w.ipa.endsWith('/'), w.id).toBe(true);
+      expect(DECKS.some((d) => d.id === w.deckId), w.id).toBe(true);
     }
+  });
+  it('her kelimenin ilk örnek cümlesi kelimenin kendisini içerir (quiz için)', () => {
+    const missing = SEED_WORDS.filter((w) => !splitByTerm(w.examples[0].en, w.word).some((p) => p.match)).map((w) => w.id);
+    expect(missing).toEqual([]);
+  });
+  it('her örnek cümlenin Türkçe çevirisi var', () => {
+    expect(SEED_WORDS.filter((w) => !w.examples[0].tr).map((w) => w.id)).toEqual([]);
   });
 });
 

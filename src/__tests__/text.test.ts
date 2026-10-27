@@ -48,3 +48,17 @@ describe('similarity', () => {
     expect(similarity('table', 'inevitable')).toBeLessThan(0.6);
   });
 });
+
+describe('splitByTerm çekim desteği', () => {
+  const hit = (text: string, term: string) => splitByTerm(text, term).filter((p) => p.match).map((p) => p.text);
+  it('düzensiz fiilleri ve deyimleri tanır', () => {
+    expect(hit('I ran into an old friend.', 'run into')).toEqual(['ran into']);
+    expect(hit('They made up the next day.', 'make up')).toEqual(['made up']);
+    expect(hit('She always goes the extra mile.', 'go the extra mile')).toEqual(['goes the extra mile']);
+  });
+  it('ünsüz ikizleşmesini ve çoğul son kelimeyi tanır', () => {
+    expect(hit('The flight was cancelled.', 'cancel')).toEqual(['cancelled']);
+    expect(hit('We stopped here.', 'stop')).toEqual(['stopped']);
+    expect(hit('Our utility bills are high.', 'utility bill')).toEqual(['utility bills']);
+  });
+});

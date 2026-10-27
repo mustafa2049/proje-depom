@@ -1,4 +1,6 @@
+import { slugify } from '../lib/slug';
 import type { Cefr, Example, PartOfSpeech, Word } from '../lib/types';
+import { EXTRA_WORDS } from './vocab';
 
 type Extra = Partial<Omit<Word, 'id' | 'word' | 'ipa' | 'pos' | 'cefr' | 'meaning' | 'examples' | 'deckId'>>;
 
@@ -15,14 +17,7 @@ function w(
   return { id: slugify(word), word, ipa, pos, cefr, meaning, examples, deckId, ...extra };
 }
 
-export function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/['’]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
+export { slugify };
 
 const ex = (en: string, tr: string): Example => ({ en, tr });
 
@@ -492,6 +487,9 @@ export const SEED_WORDS: Word[] = [
   ]),
 ];
 
+/** Elle yazılmış ayrıntılı kelimeler + satır formatındaki genişletilmiş sözlük. */
+SEED_WORDS.push(...EXTRA_WORDS);
+
 export const SEED_WORD_MAP: Record<string, Word> = Object.fromEntries(SEED_WORDS.map((x) => [x.id, x]));
 
 export const POS_LABELS: Record<PartOfSpeech, { tr: string; en: string }> = {
@@ -503,4 +501,5 @@ export const POS_LABELS: Record<PartOfSpeech, { tr: string; en: string }> = {
   idiom: { tr: 'Deyim', en: 'Idiom' },
   phrase: { tr: 'Kalıp', en: 'Phrase' },
   conjunction: { tr: 'Bağlaç', en: 'Conjunction' },
+  preposition: { tr: 'Edat', en: 'Preposition' },
 };
