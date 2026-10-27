@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { SubScreen } from '../components/Layout';
+import { AiSettings } from '../components/AiSettings';
 import { Sheet } from '../components/Sheet';
 import { useToast } from '../components/Toast';
 import { cx, Icon } from '../components/ui';
@@ -413,6 +414,7 @@ export default function Profile() {
             aria-label="Telaffuz hızı"
           />
         </div>
+        <AiSettings />
         <button
           type="button"
           onClick={() => {

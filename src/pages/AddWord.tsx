@@ -5,6 +5,8 @@ import { useToast } from '../components/Toast';
 import { cx, Icon, SpeakButton } from '../components/ui';
 import { DECKS, PERSONAL_DECK_ID } from '../data/decks';
 import { POS_LABELS, slugify } from '../data/words';
+import { aiAvailable } from '../lib/ai';
+import { aiWordInfo } from '../lib/aiTasks';
 import { lookupOnline } from '../lib/dictionary';
 import { BOX_COLORS, BOX_LABELS } from '../lib/leitner';
 import { vibrate } from '../lib/speech';
@@ -58,7 +60,9 @@ export default function AddWord() {
   const [deckId, setDeckId] = useState(PERSONAL_DECK_ID);
   const [box, setBox] = useState<BoxNumber>(1);
   const [loading, setLoading] = useState(false);
-  const [filled, setFilled] = useState<'local' | 'online' | 'partial' | null>(null);
+  const [filled, setFilled] = useState<'local' | 'online' | 'partial' | 'ai' | null>(null);
+  // Yapay zekânın ürettiği ama formda alanı olmayan bilgiler (kayıtta karta eklenir)
+  const [aiExtra, setAiExtra] = useState<Pick<Word, 'mnemonic' | 'collocations'>>({});
   const deckCounts = deckWordCount(state);
 
   const existing = words[slugify(form.word)];
@@ -75,6 +79,19 @@ export default function AddWord() {
     }
     setLoading(true);
     setFilled(null);
+    setAiExtra({});
+    if (aiAvailable()) {
+      try {
+        const w = await aiWordInfo(q, deckId);
+        setForm({ ...fromWord(w), word: q });
+        setAiExtra({ mnemonic: w.mnemonic, collocations: w.collocations });
+        setFilled('ai');
+        setLoading(false);
+        return;
+      } catch {
+        // Yapay zekâ başarısızsa ücretsiz sözlüklere dön.
+      }
+    }
     const res = await lookupOnline(q, deckId);
     setLoading(false);
     if (!res) {
@@ -117,6 +134,7 @@ export default function AddWord() {
       meaning: form.meaning.trim(),
       examples,
       synonyms: form.synonyms.split(',').map((s) => s.trim()).filter(Boolean),
+      ...(filled === 'ai' ? aiExtra : {}),
       deckId,
     };
     dispatch({ type: 'addWord', word: payload, box });
@@ -124,6 +142,7 @@ export default function AddWord() {
     toast('Desteğe Eklendi!', { description: `${word} → Kutu ${box}` });
     setForm(EMPTY);
     setFilled(null);
+    setAiExtra({});
   };
 
   return (
@@ -198,7 +217,9 @@ export default function AddWord() {
             {filled && (
               <p className="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                {filled === 'local'
+                {filled === 'ai'
+                  ? 'Yapay zekâ (Groq) ile dolduruldu; hafıza ipucu da karta eklenecek. Kaydetmeden önce kontrol et.'
+                  : filled === 'local'
                   ? 'Yerel sözlükten dolduruldu.'
                   : filled === 'online'
                     ? 'İnternet sözlüğünden dolduruldu (Free Dictionary + MyMemory çeviri). Lütfen kontrol et.'

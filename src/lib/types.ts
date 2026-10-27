@@ -100,6 +100,17 @@ export interface Profile {
   xp: number;
 }
 
+/** Mikro hikaye: paragraflarda [[kelimeId]] veya [[kelimeId|metindeki hali]] işaretleri bulunur. */
+export interface StoryData {
+  id: string;
+  title: string;
+  level: string;
+  minutes: number;
+  paragraphs: { en: string; tr: string }[];
+  questions: { q: string; options: string[]; answer: number; explanation: string }[];
+  aiGenerated?: boolean;
+}
+
 export interface AppState {
   version: 1;
   profile: Profile;
@@ -112,6 +123,8 @@ export interface AppState {
   completedStories: string[];
   bookmarks: string[];
   rescuedLeeches: number;
+  /** Yapay zekânın kullanıcının kelimeleriyle ürettiği hikayeler (en yeni başta) */
+  aiStories: StoryData[];
 }
 
 export interface Deck {

@@ -63,6 +63,22 @@ Yönlendirme `#/` tabanlı olduğu için ek sunucu ayarı gerekmez.
 Mikro Hikaye Okuyucu · Görsel Sahne Sözlüğü · Resmiyet & Ton · 3 Cümlelik Mikro Yazma · Telaffuz Laboratuvarı ·
 Eller Serbest Sesli Mod · Kelime Kökü & Aile Ağacı · İnatçı Kelimeler Kliniği
 
+## Yapay zekâ (Groq)
+
+Mikro yazma geri bildirimi, kelime doldurma, kişisel hikaye üretimi, hafıza ipucu ve Whisper ile telaffuz tanıma
+[Groq](https://console.groq.com) üzerinden çalışır (ücretsiz katman yeterlidir). Anahtar yoksa veya internet
+kesikse uygulama kural tabanlı / çevrimdışı yöntemlerle çalışmaya devam eder.
+
+Anahtar derleme sırasında `.env.local` dosyasından okunup uygulamaya gömülür; bu dosya `.gitignore`'dadır ve
+depoya **gönderilmez**:
+
+```bash
+cp .env.example .env.local   # sonra VITE_GROQ_API_KEY=gsk_... satırını doldurun
+```
+
+Anahtar uygulama içinden de değiştirilebilir: Profil → Ayarlar → Yapay Zekâ (Groq).
+Gömülü anahtar APK'dan okunabilir; bu yüzden APK yalnızca kişisel kullanım içindir, paylaşılmamalıdır.
+
 ## Teknik notlar
 
 - React 19 + TypeScript + Vite + Tailwind CSS; renk ve yazı tipi token'ları `tailwind.config.js` içinde.

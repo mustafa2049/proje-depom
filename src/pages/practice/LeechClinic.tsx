@@ -5,6 +5,8 @@ import { useToast } from '../../components/Toast';
 import { cx, EmptyState, Icon, SpeakButton } from '../../components/ui';
 import { POS_LABELS } from '../../data/words';
 import { LEECH_THRESHOLD } from '../../lib/leitner';
+import { aiAvailable } from '../../lib/ai';
+import { aiMnemonic } from '../../lib/aiTasks';
 import { canRecognize, listen, similarity, vibrate } from '../../lib/speech';
 import { useStore } from '../../store/AppStore';
 import { leeches } from '../../store/selectors';
@@ -24,6 +26,7 @@ export default function LeechClinic() {
   const [voice, setVoice] = useState<'idle' | 'listening' | 'ok' | 'fail' | 'skipped'>('idle');
   const [heard, setHeard] = useState('');
   const [mnemonic, setMnemonic] = useState('');
+  const [aiBusy, setAiBusy] = useState(false);
   const [rescued, setRescued] = useState(false);
 
   useEffect(() => {
@@ -201,6 +204,29 @@ export default function LeechClinic() {
                   className="p-2.5 rounded-lg bg-surface-container-lowest text-on-surface font-body-sm text-body-sm outline-none focus:ring-1 focus:ring-tertiary"
                 />
               </>
+            )}
+            {aiAvailable() && (
+              <button
+                type="button"
+                disabled={aiBusy}
+                onClick={async () => {
+                  setAiBusy(true);
+                  try {
+                    const m = await aiMnemonic(word.word, word.meaning);
+                    dispatch({ type: 'updateWord', word: { ...word, mnemonic: m } });
+                    setMnemonic(m);
+                    toast('Yeni hafıza ipucu hazır', { icon: 'lightbulb' });
+                  } catch (e) {
+                    toast('İpucu üretilemedi', { description: (e as Error).message, tone: 'error' });
+                  } finally {
+                    setAiBusy(false);
+                  }
+                }}
+                className="self-start px-3 py-1.5 rounded-lg bg-tertiary-container/30 text-tertiary font-label-md text-label-md flex items-center gap-1.5 disabled:opacity-60"
+              >
+                <Icon name={aiBusy ? 'progress_activity' : 'auto_awesome'} size={16} className={aiBusy ? 'animate-spin' : undefined} />
+                {aiBusy ? 'Düşünülüyor…' : word.mnemonic ? 'Yapay Zekâdan Başka İpucu İste' : 'Yapay Zekâ ile İpucu Üret'}
+              </button>
             )}
             <p className="font-label-md text-label-md text-on-surface">
               {word.word} <span className="text-primary font-bold">→</span> {word.meaning}

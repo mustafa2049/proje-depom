@@ -3,6 +3,8 @@ import { SubScreen } from '../../components/Layout';
 import { useToast } from '../../components/Toast';
 import { cx, Icon, SpeakButton } from '../../components/ui';
 import { STORIES, type Story } from '../../data/modules';
+import { aiAvailable } from '../../lib/ai';
+import { aiStory } from '../../lib/aiTasks';
 import { BOX_COLORS, isDue } from '../../lib/leitner';
 import { speak, stopSpeaking } from '../../lib/speech';
 import type { AppState } from '../../lib/types';
@@ -43,10 +45,10 @@ function storyWordIds(story: Story): string[] {
 }
 
 /** Kullanıcının Kutu 1-2'deki kelimelerini en çok içeren hikayeyi önerir. */
-function recommend(state: AppState): number {
+function recommend(state: AppState, stories: Story[]): number {
   let best = 0;
   let bestScore = -1;
-  STORIES.forEach((s, i) => {
+  stories.forEach((s, i) => {
     const ids = storyWordIds(s);
     const score = ids.reduce((sum, id) => sum + (state.cards[id] && state.cards[id].box <= 2 ? 2 : state.cards[id] ? 1 : 0), 0) - (state.completedStories.includes(s.id) ? 5 : 0);
     if (score > bestScore) {
@@ -60,8 +62,36 @@ function recommend(state: AppState): number {
 export default function StoryReader() {
   const { state, dispatch, words } = useStore();
   const toast = useToast();
-  const [storyIndex, setStoryIndex] = useState(() => recommend(state));
-  const story = STORIES[storyIndex];
+  const stories = useMemo(() => [...state.aiStories, ...STORIES], [state.aiStories]);
+  const [storyIndex, setStoryIndex] = useState(() => recommend(state, [...state.aiStories, ...STORIES]));
+  const story = stories[Math.min(storyIndex, stories.length - 1)];
+  const [generating, setGenerating] = useState(false);
+
+  /** Kutu 1-2'deki (yoksa en düşük kutulardaki) kelimelerle yapay zekâya yeni hikaye yazdırır. */
+  const generate = async () => {
+    const pool = Object.values(state.cards)
+      .filter((c) => words[c.wordId])
+      .sort((a, b) => a.box - b.box || b.lapses - a.lapses)
+      .slice(0, 8)
+      .map((c) => words[c.wordId]);
+    if (pool.length < 3) {
+      toast('Önce birkaç kelime çalış', { description: 'Hikaye için kutularında en az 3 kelime olmalı.', tone: 'info' });
+      return;
+    }
+    const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+    const avg = Math.round(pool.reduce((s, w) => s + levels.indexOf(w.cefr), 0) / pool.length);
+    setGenerating(true);
+    try {
+      const st = await aiStory(pool.map((w) => ({ id: w.id, word: w.word, meaning: w.meaning })), levels[Math.max(1, Math.min(4, avg))]);
+      dispatch({ type: 'addAiStory', story: { ...st, aiGenerated: true } });
+      setStoryIndex(0);
+      toast('Yeni hikaye hazır!', { description: `${storyWordIds(st).length} kelimen hikayede geçiyor.`, icon: 'auto_stories' });
+    } catch (e) {
+      toast('Hikaye oluşturulamadı', { description: (e as Error).message, tone: 'error' });
+    } finally {
+      setGenerating(false);
+    }
+  };
   const parsed = useMemo(() => story.paragraphs.map((p) => parseParagraph(p.en)), [story]);
   const ids = useMemo(() => storyWordIds(story), [story]);
   const [open, setOpen] = useState<{ p: number; id: string } | null>(null);
@@ -147,15 +177,15 @@ export default function StoryReader() {
               {ids.length} Hedef Kelime
             </span>
           </div>
-          <div className="flex gap-1 mt-2">
-            {STORIES.map((s, i) => (
+          <div className="flex gap-1 mt-2 overflow-x-auto no-scrollbar max-w-[70vw]">
+            {stories.map((s, i) => (
               <button
                 key={s.id}
                 type="button"
                 onClick={() => setStoryIndex(i)}
-                className={cx('px-2 py-0.5 rounded-full font-label-sm text-label-sm', i === storyIndex ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant')}
+                className={cx('px-2 py-0.5 rounded-full font-label-sm text-label-sm shrink-0', i === storyIndex ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant')}
               >
-                {i + 1}
+                {s.aiGenerated ? '✨' : i + 1 - state.aiStories.length}
                 {state.completedStories.includes(s.id) && ' ✓'}
               </button>
             ))}
@@ -170,6 +200,24 @@ export default function StoryReader() {
           <Icon name={bookmarked ? 'bookmark' : 'bookmark_border'} size={20} fill={bookmarked} />
         </button>
       </div>
+
+      {aiAvailable() && (
+        <button
+          type="button"
+          disabled={generating}
+          onClick={generate}
+          className="w-full h-12 rounded-xl bg-gradient-to-r from-tertiary-container/40 to-primary-container/30 text-on-surface font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition-transform disabled:opacity-60"
+        >
+          <Icon name={generating ? 'progress_activity' : 'auto_awesome'} size={20} className={cx('text-tertiary', generating && 'animate-spin')} />
+          {generating ? 'Hikaye yazılıyor…' : 'Kendi Kelimelerimle Yeni Hikaye Yaz'}
+        </button>
+      )}
+      {story.aiGenerated && (
+        <div className="flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant -mt-2">
+          <span className="flex items-center gap-1"><Icon name="auto_awesome" size={14} className="text-tertiary" /> Yapay zekâ ile senin kelimelerinden yazıldı</span>
+          <button type="button" className="text-error" onClick={() => { dispatch({ type: 'deleteAiStory', id: story.id }); setStoryIndex(0); }}>Sil</button>
+        </div>
+      )}
 
       <section className="sticky top-16 z-30">
         <div className="bg-surface-container-high/90 backdrop-blur-md rounded-xl p-space-sm shadow-md flex items-center justify-between gap-2">
@@ -374,7 +422,7 @@ export default function StoryReader() {
           </div>
           <button
             type="button"
-            onClick={completed ? () => setStoryIndex((i) => (i + 1) % STORIES.length) : complete}
+            onClick={completed ? () => setStoryIndex((i) => (i + 1) % stories.length) : complete}
             className={cx(
               'w-full h-14 rounded-xl font-headline-sm text-headline-sm flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-all',
               completed ? 'bg-secondary-container text-on-secondary-container' : 'bg-primary text-on-primary',

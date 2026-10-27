@@ -6,6 +6,8 @@ import { JOURNAL_PROMPTS } from '../../data/modules';
 import { SEED_WORDS } from '../../data/words';
 import { BOX_INTERVALS, clampBox, isDue, nextBox } from '../../lib/leitner';
 import { splitByTerm } from '../../lib/text';
+import { aiAvailable } from '../../lib/ai';
+import { aiWritingFeedback, type AiWritingFeedback } from '../../lib/aiTasks';
 import { analyzeWriting } from '../../lib/writing';
 import type { AppState, Word } from '../../lib/types';
 import { useStore } from '../../store/AppStore';
@@ -55,6 +57,8 @@ export default function Journal() {
   const [text, setText] = useState('');
   const [editing, setEditing] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [ai, setAi] = useState<{ text: string; result: AiWritingFeedback } | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const targetWords = useMemo(() => targets.map((id) => words[id]).filter(Boolean), [targets, words]);
   const analysis = useMemo(() => analyzeWriting(text, targetWords.map((w) => w.word), ADVANCED), [text, targetWords]);
   const allUsed = analysis.usedTargets.length === targetWords.length;
@@ -74,8 +78,21 @@ export default function Journal() {
   const restart = () => {
     setTargets(pickTargets(state, words));
     setText('');
+    setAi(null);
     setSaved(false);
     setEditing(true);
+  };
+
+  const askAi = async () => {
+    setAiLoading(true);
+    try {
+      const result = await aiWritingFeedback(text, targetWords.map((w) => w.word), prompt);
+      setAi({ text, result });
+    } catch (e) {
+      toast('Yapay zekâ değerlendirmesi alınamadı', { description: (e as Error).message, tone: 'error' });
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   return (
@@ -172,7 +189,93 @@ export default function Journal() {
         </div>
       </section>
 
-      {analysis.words >= 5 && (
+      {aiAvailable() && analysis.words >= 5 && (
+        <section className="flex flex-col gap-space-sm p-space-md rounded-xl bg-gradient-to-br from-primary-container/25 to-surface-container-high shadow-md">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-space-xs">
+              <div className="w-7 h-7 rounded-lg bg-tertiary/20 flex items-center justify-center text-tertiary">
+                <Icon name="auto_awesome" size={18} fill />
+              </div>
+              <div>
+                <h2 className="font-headline-sm text-headline-sm text-on-surface">Yapay Zekâ Öğretmen</h2>
+                <p className="font-label-sm text-label-sm text-on-surface-variant">Gramer düzeltmesi ve kişisel geri bildirim</p>
+              </div>
+            </div>
+            {ai && <span className="px-space-sm py-0.5 rounded-full bg-secondary-container/30 text-secondary font-label-sm text-label-sm font-semibold">%{ai.result.score}</span>}
+          </div>
+          {!ai || ai.text !== text ? (
+            <button
+              type="button"
+              disabled={aiLoading}
+              onClick={askAi}
+              className="w-full h-11 rounded-lg bg-tertiary text-on-tertiary font-label-lg text-label-lg flex items-center justify-center gap-1.5 disabled:opacity-60"
+            >
+              <Icon name={aiLoading ? 'progress_activity' : 'auto_awesome'} size={18} className={aiLoading ? 'animate-spin' : undefined} />
+              {aiLoading ? 'Değerlendiriliyor…' : ai ? 'Metin değişti — Yeniden Değerlendir' : 'Yapay Zekâya Değerlendirt'}
+            </button>
+          ) : null}
+          {ai && (
+            <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-2 gap-space-xs">
+                <div className="p-space-sm rounded-lg bg-surface-container-low">
+                  <span className="font-label-sm text-label-sm text-on-surface-variant">Seviye</span>
+                  <p className="font-headline-lg text-headline-lg text-primary font-bold">{ai.result.level}</p>
+                </div>
+                <div className="p-space-sm rounded-lg bg-surface-container-low">
+                  <span className="font-label-sm text-label-sm text-on-surface-variant">Doğallık</span>
+                  <p className="font-headline-lg text-headline-lg text-secondary font-bold">%{ai.result.score}</p>
+                </div>
+              </div>
+              {ai.result.summary && <p className="font-body-sm text-body-sm text-on-surface leading-relaxed">{ai.result.summary}</p>}
+              {ai.result.errors.map((e, i) => (
+                <div key={i} className="p-2.5 rounded-lg bg-surface-container-lowest flex flex-col gap-0.5">
+                  <p className="font-body-sm text-body-sm">
+                    {e.original && <span className="line-through text-error mr-1.5">{e.original}</span>}
+                    <span className="text-secondary font-semibold">{e.fix}</span>
+                  </p>
+                  <p className="font-label-md text-label-md text-on-surface-variant font-normal">{e.explanation}</p>
+                </div>
+              ))}
+              {ai.result.targets.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {ai.result.targets.map((t) => (
+                    <span key={t.word} title={t.comment} className={cx('px-2 py-0.5 rounded-full font-label-sm text-label-sm flex items-center gap-1', t.ok ? 'bg-secondary-container/20 text-secondary' : 'bg-error-container/30 text-error')}>
+                      <Icon name={t.ok ? 'check' : 'priority_high'} size={12} /> {t.word}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {ai.result.targets.filter((t) => !t.ok && t.comment).map((t) => (
+                <p key={t.word} className="font-label-md text-label-md text-on-surface-variant font-normal">
+                  <strong className="text-error">{t.word}:</strong> {t.comment}
+                </p>
+              ))}
+              {ai.result.upgrades.map((u, i) => (
+                <div key={i} className="p-2.5 rounded-lg bg-surface-container-lowest flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-body-sm text-body-sm"><span className="text-on-surface-variant line-through">{u.from}</span> → <span className="text-primary font-medium">{u.to}</span></p>
+                    <p className="font-label-sm text-label-sm text-on-surface-variant font-normal">{u.note}</p>
+                  </div>
+                  <button type="button" disabled={saved || !text.includes(u.from)} onClick={() => setText((t) => t.replace(u.from, u.to))} className="px-2 py-1 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm shrink-0 disabled:opacity-40">
+                    Uygula
+                  </button>
+                </div>
+              ))}
+              {ai.result.corrected && ai.result.corrected !== text && (
+                <div className="p-2.5 rounded-lg bg-secondary-container/10 flex flex-col gap-1.5">
+                  <span className="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Düzeltilmiş Metin</span>
+                  <p className="font-body-sm text-body-sm text-on-surface">{ai.result.corrected}</p>
+                  <button type="button" disabled={saved} onClick={() => setText(ai.result.corrected)} className="self-end px-3 py-1.5 rounded-lg bg-secondary-container text-on-secondary-container font-label-md text-label-md disabled:opacity-40">
+                    Düzeltilmiş Hali Kullan
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
+      {analysis.words >= 5 && !(ai && ai.text === text) && (
         <section className="flex flex-col gap-space-sm p-space-md rounded-xl bg-surface-container-high shadow-md">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-space-xs">

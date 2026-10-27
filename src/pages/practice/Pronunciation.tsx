@@ -3,6 +3,7 @@ import { SubScreen } from '../../components/Layout';
 import { useToast } from '../../components/Toast';
 import { BOX_COLORS } from '../../lib/leitner';
 import { cx, Highlight, Icon, shuffle, SpeakButton } from '../../components/ui';
+import { aiAvailable, transcribe } from '../../lib/ai';
 import { canRecognize, listen, similarity, speak, vibrate, type RecognitionHandle } from '../../lib/speech';
 import type { Word } from '../../lib/types';
 import { useStore } from '../../store/AppStore';
@@ -65,6 +66,7 @@ export default function Pronunciation() {
   const [duration, setDuration] = useState(0);
   const [score, setScore] = useState<number | null>(null);
   const [heard, setHeard] = useState('');
+  const [analyzing, setAnalyzing] = useState(false);
   const recorder = useRef<MediaRecorder | null>(null);
   const recognition = useRef<RecognitionHandle | null>(null);
   const chunks = useRef<Blob[]>([]);
@@ -97,6 +99,27 @@ export default function Pronunciation() {
     );
   }
 
+  /** Tanınan metin adaylarından en iyi puanı hesaplar. */
+  const scoreAlternatives = (alts: { transcript: string; confidence: number }[]) => {
+    let best = 0;
+    let bestText = '';
+    for (const a of alts) {
+      const sim = similarity(a.transcript, word.word);
+      const s = Math.round(sim * 85 + (sim > 0.9 ? (a.confidence || 0.8) * 15 : 0));
+      if (s > best) {
+        best = s;
+        bestText = a.transcript;
+      }
+    }
+    setScore(Math.min(100, best));
+    setHeard(bestText || alts[0]?.transcript || '');
+    if (best >= 70) dispatch({ type: 'addXp', amount: 5 });
+  };
+
+  // Yapay zekâ anahtarı varsa kayıt Whisper ile yazıya çevrilir (cihazın ses tanımasından daha doğru;
+  // Android'de mikrofonu kayıtla paylaşma sorunu da olmaz).
+  const useWhisper = aiAvailable();
+
   const start = async () => {
     if (recording) return;
     reset();
@@ -121,27 +144,22 @@ export default function Pronunciation() {
       } catch {
         setUserBars(null);
       }
+      if (useWhisper && blob.size > 0) {
+        setAnalyzing(true);
+        try {
+          const text = await transcribe(blob);
+          scoreAlternatives([{ transcript: text, confidence: 0.9 }]);
+        } catch (e) {
+          toast('Ses tanınamadı', { description: (e as Error).message, tone: 'error' });
+        } finally {
+          setAnalyzing(false);
+        }
+      }
     };
     mr.start();
     recorder.current = mr;
     setRecording(true);
-    if (canRecognize()) {
-      recognition.current = listen('en-US', (alts) => {
-        let best = 0;
-        let bestText = '';
-        for (const a of alts) {
-          const sim = similarity(a.transcript, word.word);
-          const s = Math.round(sim * 85 + (sim > 0.9 ? (a.confidence || 0.8) * 15 : 0));
-          if (s > best) {
-            best = s;
-            bestText = a.transcript;
-          }
-        }
-        setScore(Math.min(100, best));
-        setHeard(bestText || alts[0]?.transcript || '');
-        if (best >= 70) dispatch({ type: 'addXp', amount: 5 });
-      });
-    }
+    if (!useWhisper && canRecognize()) recognition.current = listen('en-US', scoreAlternatives);
   };
 
   const stop = () => {
@@ -156,8 +174,10 @@ export default function Pronunciation() {
   const syllables = word.syllables;
   const scoreTone = score === null ? 'text-outline' : score >= 85 ? 'text-secondary' : score >= 60 ? 'text-tertiary' : 'text-error';
   const feedback =
-    score === null
-      ? canRecognize()
+    analyzing
+      ? 'Kaydın yapay zekâ (Whisper) ile analiz ediliyor…'
+      : score === null
+      ? useWhisper || canRecognize()
         ? 'Mikrofon butonuna basılı tut, kelimeyi söyle ve bırak.'
         : 'Bu tarayıcı otomatik puanlamayı desteklemiyor; kaydını ana dil telaffuzuyla karşılaştırarak dinle.'
       : score >= 85
@@ -243,7 +263,7 @@ export default function Pronunciation() {
               {score === null ? 'Puan Bekleniyor' : score >= 85 ? 'Mükemmel Uyum' : score >= 60 ? 'İyi' : 'Geliştir'}
             </span>
             <span className="font-label-md text-label-md text-on-surface truncate">{heard ? `“${heard}”` : 'Henüz kayıt yok'}</span>
-            <span className="font-label-sm text-label-sm text-on-surface-variant">Konuşma tanıma</span>
+            <span className="font-label-sm text-label-sm text-on-surface-variant">{useWhisper ? 'Whisper (yapay zekâ)' : 'Konuşma tanıma'}</span>
           </div>
         </div>
         <div className="bg-surface-container-low rounded-xl p-3.5 flex items-center gap-3 shadow-sm">

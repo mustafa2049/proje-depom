@@ -1,4 +1,4 @@
-import type { Cefr, PartOfSpeech } from '../lib/types';
+import type { Cefr, PartOfSpeech, StoryData } from '../lib/types';
 
 /** Modüllerde geçen ama çekirdek sözlükte olmayan kelimeler için hafif kayıt. */
 export interface GlossaryEntry {
@@ -148,15 +148,7 @@ export const SCENES: SceneLine[] = [
 
 // ─────────────────────────── Mikro Hikayeler ───────────────────────────
 
-export interface Story {
-  id: string;
-  title: string;
-  level: string;
-  minutes: number;
-  /** [[kelimeId]] veya [[kelimeId|metindeki hali]] biçiminde işaretli paragraflar */
-  paragraphs: { en: string; tr: string }[];
-  questions: { q: string; options: string[]; answer: number; explanation: string }[];
-}
+export type Story = StoryData;
 
 export const STORIES: Story[] = [
   {

@@ -5,3 +5,8 @@ dev-dist
 .DS_Store
 coverage
 *.tsbuildinfo
+
+# Yerel gizli ayarlar (Groq API anahtarı) — depoya gönderilmez
+.env
+.env.*
+!.env.example
