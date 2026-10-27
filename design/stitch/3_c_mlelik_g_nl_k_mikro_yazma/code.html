@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "outline": "#908fa0", "background": "#0b1326", "inverse-surface": "#dae2fd", "error": "#ffb4ab", "on-surface": "#dae2fd", "on-secondary-container": "#00311f", "inverse-on-surface": "#283044", "tertiary-container": "#ca8100", "primary-fixed-dim": "#c0c1ff", "secondary-container": "#00a572", "inverse-primary": "#494bd6", "surface-container": "#171f33", "on-secondary-fixed": "#002113", "on-primary-container": "#0d0096", "tertiary-fixed": "#ffddb8", "on-error-container": "#ffdad6", "primary-container": "#8083ff", "on-tertiary-fixed-variant": "#653e00", "on-surface-variant": "#c7c4d7", "on-tertiary-fixed": "#2a1700", "on-tertiary": "#472a00", "surface-container-highest": "#2d3449", "primary-fixed": "#e1e0ff", "tertiary": "#ffb95f", "surface-variant": "#2d3449", "secondary-fixed": "#6ffbbe", "secondary": "#4edea3", "surface-tint": "#c0c1ff", "surface-bright": "#31394d", "surface-container-high": "#222a3d", "on-tertiary-container": "#3e2400", "secondary-fixed-dim": "#4edea3", "error-container": "#93000a", "on-primary-fixed": "#07006c", "surface-container-low": "#131b2e", "surface": "#0b1326", "surface-dim": "#0b1326", "on-primary-fixed-variant": "#2f2ebe", "on-background": "#dae2fd", "surface-container-lowest": "#060e20", "on-secondary": "#003824", "outline-variant": "#464554", "on-secondary-fixed-variant": "#005236", "primary": "#c0c1ff", "on-error": "#690005", "tertiary-fixed-dim": "#ffb95f", "on-primary": "#1000a9" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "margin-tablet": "2rem", "space-xl": "2rem", "gutter": "1rem", "gutter-tablet": "1.5rem", "space-md": "1rem", "space-sm": "0.5rem", "space-lg": "1.5rem", "space-xs": "0.25rem", "margin": "1rem" }, fontFamily: { "body-lg": ["Inter"], "headline-sm": ["Plus Jakarta Sans"], "body-sm": ["Inter"], "label-md": ["Inter"], "label-sm": ["Inter"], "headline-lg": ["Plus Jakarta Sans"], "display-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "body-md": ["Inter"], "label-lg": ["Inter"] }, fontSize: { "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }] } } } }</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#0b1326;color:#dae2fd;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-on-surface min-h-screen flex flex-col selection:bg-primary-container selection:text-on-primary"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-20 px-gutter flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0 flex-1"><button aria-label="Go back or close session" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-high transition-colors focus:outline-none flex-shrink-0" onclick="history.back()" type="button"><span class="material-symbols-outlined text-[24px]">close</span></button><div class="flex flex-col min-w-0 flex-1 justify-center"><div class="flex items-center gap-space-xs"><h1 class="font-headline-sm text-headline-sm text-on-surface truncate">Listening Comprehension</h1><span class="inline-flex items-center px-space-xs py-0.5 rounded-full bg-secondary-container/20 text-secondary font-label-sm text-label-sm flex-shrink-0"><span class="w-1.5 h-1.5 rounded-full bg-secondary mr-1 animate-pulse"></span>Active</span></div><p class="font-label-md text-label-md text-on-surface-variant truncate">Module: Advanced Leitner Recall</p></div></div><div class="flex items-center gap-space-sm flex-shrink-0"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col flex-1 relative w-full pt-20 pb-safe bg-surface min-h-screen"><div class="flex flex-col w-full px-gutter pb-space-xl gap-space-lg">
+<!-- Status & Motivational Subheading -->
+<section class="flex items-center justify-between mt-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
+<span class="font-label-md text-label-md text-secondary">Kelimeleri Üretime Dönüştür</span>
+</div>
+<div class="flex items-center gap-1 px-space-sm py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px] text-tertiary" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span>Seri: 14 Gün</span>
+</div>
+</section>
+<!-- Leitner Target Words Bar -->
+<section class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Günün 3 Zorunlu Kelimesi</span>
+<span class="font-label-sm text-label-sm text-secondary" id="badge-tracker">3/3 Hazır</span>
+</div>
+<div class="grid grid-cols-3 gap-space-xs">
+<!-- Word 1 -->
+<div class="flex flex-col p-space-sm rounded-xl bg-surface-container shadow-sm transition-transform active:scale-95">
+<div class="flex items-center justify-between mb-0.5">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate">reluctant</span>
+<span class="material-symbols-outlined text-secondary text-[18px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">İsteksiz</span>
+</div>
+<!-- Word 2 -->
+<div class="flex flex-col p-space-sm rounded-xl bg-surface-container shadow-sm transition-transform active:scale-95">
+<div class="flex items-center justify-between mb-0.5">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate">inevitable</span>
+<span class="material-symbols-outlined text-secondary text-[18px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">Kaçınılmaz</span>
+</div>
+<!-- Word 3 -->
+<div class="flex flex-col p-space-sm rounded-xl bg-surface-container shadow-sm transition-transform active:scale-95" id="word-thrive-pill">
+<div class="flex items-center justify-between mb-0.5">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate">thrive</span>
+<span class="material-symbols-outlined text-secondary text-[18px]" id="thrive-icon" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">Gelişmek / Serpilmek</span>
+</div>
+</div>
+</section>
+<!-- Writing Prompt Card -->
+<section class="flex flex-col p-space-md rounded-xl bg-surface-container-low shadow-sm">
+<div class="flex items-center gap-space-xs mb-space-xs text-primary">
+<span class="material-symbols-outlined text-[20px]">lightbulb</span>
+<span class="font-label-md text-label-md tracking-wide uppercase">Yönlendirici Görev</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface italic leading-relaxed">
+      “Bugün iş yerinde, okulda veya günlük yaşamında karşılaştığın zor bir anı 2-3 cümleyle anlat.”
+    </p>
+</section>
+<!-- Interactive Journal Entry & Editor Card -->
+<section class="flex flex-col rounded-xl bg-surface-container p-space-md shadow-md gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">edit_note</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Canlı Metin Editörü</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-secondary font-label-sm text-label-sm">3 Cümle</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">28 Kelime</span>
+</div>
+</div>
+<!-- Active Highlighting Display Area -->
+<div class="p-space-md rounded-lg bg-surface-container-lowest font-body-lg text-body-lg text-on-surface leading-relaxed min-h-[120px]">
+      At first, my team was 
+      <span class="inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded bg-secondary-container/30 text-secondary font-semibold">
+        reluctant
+      </span> 
+      to adopt the new cloud system. However, the migration was 
+      <span class="inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded bg-secondary-container/30 text-secondary font-semibold">
+        inevitable
+      </span> 
+      for data security. I hope our productivity will 
+      <span class="inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded bg-secondary-container/30 text-secondary font-semibold">
+        thrive
+      </span> 
+      under these new conditions.
+    </div>
+<div class="flex items-center justify-between pt-space-xs text-on-surface-variant font-label-sm text-label-sm">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">verified</span>
+<span>Hedef kelimelerin tamamı tespit edildi</span>
+</div>
+<button class="text-primary hover:underline flex items-center gap-0.5 font-label-sm text-label-sm focus:outline-none" type="button">
+<span>Düzenle</span>
+<span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</button>
+</div>
+</section>
+<!-- AI Smart Analysis Panel -->
+<section class="flex flex-col gap-space-sm p-space-md rounded-xl bg-surface-container-high shadow-md">
+<!-- Analysis Header -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<div class="w-7 h-7 rounded-lg bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">psychology</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">AI Akıllı Analiz</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Gerçek Zamanlı Çıktı Geri Bildirimi</p>
+</div>
+</div>
+<span class="px-space-sm py-0.5 rounded-full bg-secondary-container/30 text-secondary font-label-sm text-label-sm font-semibold">
+        Optimum Akış
+      </span>
+</div>
+<!-- Metrics Row -->
+<div class="grid grid-cols-2 gap-space-xs pt-space-xs">
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-0.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant">CEFR Seviye Skoru</span>
+<div class="flex items-baseline gap-1.5">
+<span class="font-headline-lg text-headline-lg text-primary font-bold">B2+</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Yetkin Seviye</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary">Güçlü Cümle Yapısı</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-0.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Gramer &amp; Doğallık</span>
+<div class="flex items-baseline gap-1.5">
+<span class="font-headline-lg text-headline-lg text-secondary font-bold">%96</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Doğal</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">0 Gramer Hatası</span>
+</div>
+</div>
+<!-- Advanced C1 Collocation Suggestions -->
+<div class="flex flex-col gap-space-xs pt-space-xs">
+<div class="flex items-center gap-1 text-tertiary">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-label-md text-label-md font-semibold">C1 / Üst Seviye Yükseltme Önerileri</span>
+</div>
+<!-- Recommendation Card 1 -->
+<div class="p-space-sm rounded-lg bg-surface-container-lowest flex flex-col gap-space-xs">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+<span class="line-through">was reluctant to adopt</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5 text-primary font-body-md text-body-md font-medium">
+<span class="material-symbols-outlined text-[16px] text-tertiary">arrow_forward</span>
+<span>showed initial hesitancy toward adopting</span>
+</div>
+<button class="px-2 py-1 rounded bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-label-sm transition-colors" onclick="applySuggestion(this, 'was reluctant to adopt', 'showed initial hesitancy toward adopting')" type="button">
+            Uygula
+          </button>
+</div>
+</div>
+<!-- Recommendation Card 2 -->
+<div class="p-space-sm rounded-lg bg-surface-container-lowest flex flex-col gap-space-xs">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+<span class="line-through">inevitable for data security</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5 text-primary font-body-md text-body-md font-medium">
+<span class="material-symbols-outlined text-[16px] text-tertiary">arrow_forward</span>
+<span>an imperative safeguard for data security</span>
+</div>
+<button class="px-2 py-1 rounded bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-label-sm transition-colors" onclick="applySuggestion(this, 'inevitable for data security', 'an imperative safeguard for data security')" type="button">
+            Uygula
+          </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Leitner Box Promotion Visualizer -->
+<section class="flex flex-col p-space-md rounded-xl bg-surface-container-low shadow-sm gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant">Leitner Durumu</span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold">Kutu 2 → Kutu 3 (7 Günlük Aralık)</span>
+</div>
+<div class="flex items-center gap-1.5 pt-1">
+<div class="flex-1 h-2 rounded-full bg-secondary-container"></div>
+<div class="flex-1 h-2 rounded-full bg-secondary-container"></div>
+<div class="flex-1 h-2 rounded-full bg-secondary animate-pulse"></div>
+<div class="flex-1 h-2 rounded-full bg-surface-container-highest"></div>
+<div class="flex-1 h-2 rounded-full bg-surface-container-highest"></div>
+</div>
+</section>
+<!-- Bottom CTA Actions -->
+<section class="flex flex-col gap-space-xs pt-space-xs">
+<button class="w-full h-14 rounded-xl bg-primary text-on-primary font-headline-sm text-headline-sm font-semibold flex items-center justify-center gap-space-sm shadow-lg hover:brightness-110 active:scale-95 transition-all" id="save-journal-btn" type="button">
+<span class="material-symbols-outlined text-[24px]">bookmark_added</span>
+<span>Günlüğe Kaydet &amp; 3 Kelimeyi Kutu 3'e Yükselt</span>
+<span class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary-container font-label-sm text-label-sm font-bold">
+        +35 XP
+      </span>
+</button>
+<p class="text-center font-label-sm text-label-sm text-on-surface-variant">
+      Bu çıktı, aralıklı tekrar algoritmanızdaki bir sonraki hatırlatma gününü 7 gün sonraya öteler.
+    </p>
+</section>
+</div>
+<script>
+  function applySuggestion(btn, oldText, newText) {
+    btn.textContent = 'Uygulandı';
+    btn.classList.add('bg-secondary', 'text-on-secondary');
+    btn.classList.remove('bg-surface-container-high', 'text-on-surface');
+    btn.disabled = true;
+  }
+
+  document.getElementById('save-journal-btn')?.addEventListener('click', function() {
+    this.innerHTML = `
+      <span class="material-symbols-outlined text-[24px] text-on-primary animate-bounce">check</span>
+      <span>Kaydedildi & Kutu 3'e Taşındı!</span>
+      <span class="px-2 py-0.5 rounded-full bg-secondary text-on-secondary font-label-sm text-label-sm font-bold">+35 XP</span>
+    `;
+    this.classList.add('bg-secondary', 'text-on-secondary');
+    this.classList.remove('bg-primary', 'text-on-primary');
+  });
+</script></main></body></html>

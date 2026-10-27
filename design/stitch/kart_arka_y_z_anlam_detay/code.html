@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-tertiary": "#472a00", "on-primary-container": "#0d0096", "surface-container-lowest": "#060e20", "on-surface-variant": "#c7c4d7", "tertiary-fixed": "#ffddb8", "secondary-fixed": "#6ffbbe", "surface-container-highest": "#2d3449", "on-error-container": "#ffdad6", "secondary-container": "#00a572", "error-container": "#93000a", "inverse-on-surface": "#283044", "secondary-fixed-dim": "#4edea3", "on-secondary-container": "#00311f", "secondary": "#4edea3", "on-error": "#690005", "primary-fixed-dim": "#c0c1ff", "on-primary-fixed-variant": "#2f2ebe", "tertiary": "#ffb95f", "tertiary-fixed-dim": "#ffb95f", "tertiary-container": "#ca8100", "on-background": "#dae2fd", "on-tertiary-fixed": "#2a1700", "inverse-surface": "#dae2fd", "on-primary-fixed": "#07006c", "surface": "#0b1326", "on-secondary-fixed": "#002113", "error": "#ffb4ab", "on-primary": "#1000a9", "on-secondary-fixed-variant": "#005236", "on-surface": "#dae2fd", "surface-container-low": "#131b2e", "inverse-primary": "#494bd6", "on-tertiary-fixed-variant": "#653e00", "on-secondary": "#003824", "surface-container-high": "#222a3d", "background": "#0b1326", "outline-variant": "#464554", "surface-tint": "#c0c1ff", "on-tertiary-container": "#3e2400", "primary": "#c0c1ff", "surface-variant": "#2d3449", "primary-container": "#8083ff", "surface-bright": "#31394d", "outline": "#908fa0", "surface-dim": "#0b1326", "surface-container": "#171f33", "primary-fixed": "#e1e0ff" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "gutter": "1rem", "space-md": "1rem", "space-xl": "2rem", "gutter-tablet": "1.5rem", "margin": "1rem", "margin-tablet": "2rem", "space-lg": "1.5rem", "space-sm": "0.5rem", "space-xs": "0.25rem" }, fontFamily: { "label-sm": ["Inter"], "display-lg": ["Plus Jakarta Sans"], "body-sm": ["Inter"], "headline-sm": ["Plus Jakarta Sans"], "label-md": ["Inter"], "body-md": ["Inter"], "label-lg": ["Inter"], "headline-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "body-lg": ["Inter"] }, fontSize: { "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }], "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }] } } } }</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface antialiased flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe"><div class="h-16 px-margin flex items-center justify-between gap-space-xs"><div class="flex items-center gap-space-sm min-w-0 flex-1"><button aria-label="Geri Dön" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-variant/40 transition-colors flex-shrink-0" onclick="history.back()"><span class="material-symbols-outlined text-[20px]">arrow_back</span></button><img alt="LexiLearn App Icon" class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1V0iXXXmZTe24IsmGeVKN9xP3w5w0FQ1ABflkTEBAr-ljlnoyANaSDtZ61ZwvknrpmV17E5hd55XcxtMg7D6w0-w6UH6JUYWcFQhqKT_GFjepRqSq_dOEXHqPkyhMtrpkD8VHWfqzFleordP5Qi9YxiXjxDGbYMPYD18UhxYIuAakjxXjbdofXZ0s5BiAkLS6kEwKQjI2yUaH4FUHyAgoILOhsvxWydRNmGXwmEI1JMAoXHWskLsmFvlTB8"/><h1 class="font-headline-sm text-headline-sm text-on-surface truncate">Kart &amp; Öğrenme Ekranı (Flashcard)</h1></div><div class="flex items-center gap-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAN8p3YBYXGR4wL2rkESLKokZAAQ-Lg3EcNMDFe3LEjWh61Jd3Y0aLONVSBrpwYn-jGXkwHwKOmPTrojql3MxndL4I1xMhbzE-QZZLxugquMffQevk04l8tabQ48f3_UGgnD4OxGEfiR7tkx8do6Gyf6MZfHFa5RKGgRzxRdXtS68cG86eqhxW2lzHzqH1kJYJxVlatRzkFqNjpXEOAn336zQJTk_rDtHuC2ZUZxN1OF3y38fK_EThXMA"/></div></div></header><main class="flex flex-col relative w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full pb-safe">
+<!-- Interactive Canvas Container -->
+<div class="w-full max-w-md mx-auto px-margin flex flex-col gap-space-md">
+<!-- Top Mini Session Tracker -->
+<div class="flex items-center justify-between gap-space-sm pt-space-xs">
+<!-- Session Exit Button -->
+<button aria-label="Oturumu Kapat" class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface hover:bg-surface-container-high active:scale-95 transition-all shadow-sm flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+<!-- Center Progress Indicator -->
+<div class="flex-1 flex flex-col gap-1 px-space-xs">
+<div class="flex justify-between items-center text-on-surface-variant font-label-md text-label-md">
+<span class="font-headline-sm text-label-md text-primary font-bold tracking-tight">Oturum 3</span>
+<span class="text-on-surface font-semibold">12 / 20 Kelime</span>
+</div>
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary-container rounded-full w-[60%] transition-all duration-300"></div>
+</div>
+</div>
+<!-- Streak Pill -->
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-tertiary-container/30 text-tertiary flex-shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[18px] text-tertiary" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="font-label-md text-label-md font-bold tracking-wide">14 Gün Seri</span>
+</div>
+</div>
+<!-- Leitner 5-Stage System Indicator -->
+<div class="bg-surface-container-low p-space-sm rounded-xl flex flex-col gap-2 shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-tertiary">inventory_2</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Aralıklı Tekrar Durumu</span>
+</div>
+<span class="px-2.5 py-0.5 rounded-full bg-tertiary-container/40 text-tertiary font-label-sm text-label-sm tracking-wide uppercase font-bold">
+          Kutu 2 • 2 Gün Sonra
+        </span>
+</div>
+<!-- 5-Box Stepper Visualizer -->
+<div class="grid grid-cols-5 gap-1.5 items-center w-full">
+<!-- Box 1 -->
+<div class="flex flex-col items-center gap-1">
+<div class="h-2 w-full rounded-full bg-error-container/80"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">K1</span>
+</div>
+<!-- Box 2 (Active Target) -->
+<div class="flex flex-col items-center gap-1">
+<div class="h-2.5 w-full rounded-full bg-tertiary shadow-[0_0_8px_rgba(255,185,95,0.6)]"></div>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">K2</span>
+</div>
+<!-- Box 3 -->
+<div class="flex flex-col items-center gap-1">
+<div class="h-2 w-full rounded-full bg-surface-container-highest"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">K3</span>
+</div>
+<!-- Box 4 -->
+<div class="flex flex-col items-center gap-1">
+<div class="h-2 w-full rounded-full bg-surface-container-highest"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">K4</span>
+</div>
+<!-- Box 5 -->
+<div class="flex flex-col items-center gap-1">
+<div class="h-2 w-full rounded-full bg-surface-container-highest"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">K5</span>
+</div>
+</div>
+</div>
+<!-- Active Flashcard Surface (Flipped Back View) -->
+<div class="w-full bg-surface-container rounded-xl p-space-lg flex flex-col gap-space-md shadow-xl relative overflow-hidden transition-transform duration-200" id="flashcard-surface">
+<!-- Ambient Card Header Glow & Badge -->
+<div class="flex items-center justify-between w-full">
+<span class="px-2.5 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm uppercase tracking-wider font-semibold">
+          Sıfat • Adjective
+        </span>
+<!-- Flip helper toggle -->
+<button class="flex items-center gap-1 text-on-surface-variant hover:text-on-surface active:scale-95 transition-all text-label-md font-label-md" id="flip-toggle-btn">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+<span>Ön Yüze Dön</span>
+</button>
+</div>
+<!-- Word Core Information Group -->
+<div class="flex flex-col items-center text-center gap-1.5 pt-1">
+<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight font-extrabold uppercase">
+          INEVITABLE
+        </h2>
+<!-- Phonetics & Pronunciation -->
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-body-sm text-body-sm text-on-surface-variant font-mono">/ɪnˈevɪtəbl/</span>
+<button aria-label="Telaffuzu Dinle" class="px-2.5 py-1 rounded-full bg-surface-container-high hover:bg-surface-container-highest active:scale-90 flex items-center gap-1 text-primary transition-all shadow-sm" id="audio-play-btn">
+<span class="material-symbols-outlined text-[16px]">volume_up</span>
+<span class="font-label-sm text-label-sm font-semibold">Dinle</span>
+</button>
+</div>
+<!-- Turkish Primary Meaning -->
+<div class="w-full mt-3 p-3 rounded-lg bg-surface-container-high flex flex-col items-center justify-center">
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest font-bold mb-0.5">Temel Anlamı</span>
+<p class="font-headline-md text-headline-md text-on-surface font-bold text-center">
+            Kaçınılmaz, Önlenemez
+          </p>
+</div>
+</div>
+<!-- Contextual Real-world Sentences -->
+<div class="flex flex-col gap-2.5 mt-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px]">format_quote</span>
+          Örnek Cümleler
+        </span>
+<!-- Example 1 -->
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col gap-1">
+<p class="font-body-sm text-body-sm text-on-surface leading-snug">
+            “Change is an <span class="px-1.5 py-0.5 rounded bg-secondary-container/40 text-secondary font-semibold">inevitable</span> part of career growth.”
+          </p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            → Değişim, kariyer gelişiminin kaçınılmaz bir parçasıdır.
+          </p>
+</div>
+<!-- Example 2 -->
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col gap-1">
+<p class="font-body-sm text-body-sm text-on-surface leading-snug">
+            “It was an <span class="px-1.5 py-0.5 rounded bg-secondary-container/40 text-secondary font-semibold">inevitable</span> consequence of our decision.”
+          </p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            → Kararımızın önlenemez bir sonucuydu.
+          </p>
+</div>
+</div>
+<!-- Mnemonic Hook Box -->
+<div class="p-3.5 rounded-lg bg-tertiary-container/15 flex items-start gap-3">
+<div class="w-8 h-8 rounded-full bg-tertiary-container/30 flex items-center justify-center flex-shrink-0 text-tertiary">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<span class="font-label-md text-label-md text-tertiary font-bold">Hafıza İpucu (Mnemonic)</span>
+<p class="font-body-sm text-body-sm text-on-surface leading-relaxed">
+<span class="text-tertiary font-semibold">In</span> (olumsuzluk eki) + <span class="text-tertiary font-semibold">Evitable</span> (kaçınılabilir) → Kaçınılamaz, kesinlikle başa gelecek olan.
+          </p>
+</div>
+</div>
+<!-- Synonyms & Frequent Collocations -->
+<div class="grid grid-cols-2 gap-2 mt-0.5">
+<div class="p-2.5 rounded-lg bg-surface-container-low flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wide">Eş Anlamlılar</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">unavoidable, inescapable</span>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container-low flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wide">Kalıp Kullanımlar</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">inevitable result, inevitable fate</span>
+</div>
+</div>
+</div>
+<!-- SRS Action Ergonomic Control Dock (Bottom 40% Thumb Zone) -->
+<div class="w-full flex flex-col gap-2 pt-1 pb-space-sm">
+<span class="font-label-sm text-label-sm text-center text-on-surface-variant uppercase tracking-wider font-semibold">
+        Performans Değerlendirmenizi Seçin
+      </span>
+<!-- Ergonomic Action Trio -->
+<div class="grid grid-cols-3 gap-2.5 w-full">
+<!-- Button: Forgot / Negative Demotion -->
+<button class="flex flex-col items-center justify-center min-h-[56px] py-2 px-1.5 rounded-xl bg-surface-container-high hover:bg-error-container/20 text-on-surface active:scale-95 transition-all shadow-md group" id="btn-srs-again">
+<div class="flex items-center gap-1 text-error mb-0.5">
+<span class="material-symbols-outlined text-[18px]">replay</span>
+<span class="font-label-md text-label-md font-bold text-error">Unuttum</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant group-hover:text-error transition-colors">
+            Kutu 1 (-1 Kademe)
+          </span>
+</button>
+<!-- Button: Neutral / Easy Mastery Archive -->
+<button class="flex flex-col items-center justify-center min-h-[56px] py-2 px-1.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface active:scale-95 transition-all shadow-md group" id="btn-srs-easy">
+<div class="flex items-center gap-1 text-primary mb-0.5">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+<span class="font-label-md text-label-md font-bold text-primary">Çok Kolay</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant group-hover:text-primary transition-colors">
+            Kutu 5 Arşiv
+          </span>
+</button>
+<!-- Button: Success / Retained Promotion -->
+<button class="flex flex-col items-center justify-center min-h-[56px] py-2 px-1.5 rounded-xl bg-surface-container-high hover:bg-secondary-container/20 text-on-surface active:scale-95 transition-all shadow-md group" id="btn-srs-good">
+<div class="flex items-center gap-1 text-secondary mb-0.5">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-md text-label-md font-bold text-secondary">Biliyorum</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant group-hover:text-secondary transition-colors">
+            Kutu 3 (+5 Gün)
+          </span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    const cardSurface = document.getElementById('flashcard-surface');
+    const audioBtn = document.getElementById('audio-play-btn');
+    const flipBtn = document.getElementById('flip-toggle-btn');
+    const againBtn = document.getElementById('btn-srs-again');
+    const easyBtn = document.getElementById('btn-srs-easy');
+    const goodBtn = document.getElementById('btn-srs-good');
+
+    // Subtle audio click reaction
+    if (audioBtn) {
+      audioBtn.addEventListener('click', function() {
+        this.classList.add('scale-90');
+        setTimeout(() => this.classList.remove('scale-90'), 150);
+      });
+    }
+
+    // Flip bounce simulation
+    if (flipBtn && cardSurface) {
+      flipBtn.addEventListener('click', function() {
+        cardSurface.classList.add('rotate-1', 'opacity-80');
+        setTimeout(() => {
+          cardSurface.classList.remove('rotate-1', 'opacity-80');
+        }, 200);
+      });
+    }
+
+    // Tactile SRS feedback triggers
+    function triggerActionEffect(colorClass) {
+      if (!cardSurface) return;
+      cardSurface.classList.add(colorClass);
+      setTimeout(() => {
+        cardSurface.classList.remove(colorClass);
+      }, 350);
+    }
+
+    if (againBtn) {
+      againBtn.addEventListener('click', () => triggerActionEffect('translate-x-[-4px]'));
+    }
+    if (goodBtn) {
+      goodBtn.addEventListener('click', () => triggerActionEffect('translate-x-[4px]'));
+    }
+    if (easyBtn) {
+      easyBtn.addEventListener('click', () => triggerActionEffect('scale-[0.98]'));
+    }
+  })();
+</script></main></body></html>

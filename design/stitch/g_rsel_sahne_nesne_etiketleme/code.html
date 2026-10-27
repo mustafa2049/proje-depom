@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "outline": "#908fa0", "background": "#0b1326", "inverse-surface": "#dae2fd", "error": "#ffb4ab", "on-surface": "#dae2fd", "on-secondary-container": "#00311f", "inverse-on-surface": "#283044", "tertiary-container": "#ca8100", "primary-fixed-dim": "#c0c1ff", "secondary-container": "#00a572", "inverse-primary": "#494bd6", "surface-container": "#171f33", "on-secondary-fixed": "#002113", "on-primary-container": "#0d0096", "tertiary-fixed": "#ffddb8", "on-error-container": "#ffdad6", "primary-container": "#8083ff", "on-tertiary-fixed-variant": "#653e00", "on-surface-variant": "#c7c4d7", "on-tertiary-fixed": "#2a1700", "on-tertiary": "#472a00", "surface-container-highest": "#2d3449", "primary-fixed": "#e1e0ff", "tertiary": "#ffb95f", "surface-variant": "#2d3449", "secondary-fixed": "#6ffbbe", "secondary": "#4edea3", "surface-tint": "#c0c1ff", "surface-bright": "#31394d", "surface-container-high": "#222a3d", "on-tertiary-container": "#3e2400", "secondary-fixed-dim": "#4edea3", "error-container": "#93000a", "on-primary-fixed": "#07006c", "surface-container-low": "#131b2e", "surface": "#0b1326", "surface-dim": "#0b1326", "on-primary-fixed-variant": "#2f2ebe", "on-background": "#dae2fd", "surface-container-lowest": "#060e20", "on-secondary": "#003824", "outline-variant": "#464554", "on-secondary-fixed-variant": "#005236", "primary": "#c0c1ff", "on-error": "#690005", "tertiary-fixed-dim": "#ffb95f", "on-primary": "#1000a9" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "margin-tablet": "2rem", "space-xl": "2rem", "gutter": "1rem", "gutter-tablet": "1.5rem", "space-md": "1rem", "space-sm": "0.5rem", "space-lg": "1.5rem", "space-xs": "0.25rem", "margin": "1rem" }, fontFamily: { "body-lg": ["Inter"], "headline-sm": ["Plus Jakarta Sans"], "body-sm": ["Inter"], "label-md": ["Inter"], "label-sm": ["Inter"], "headline-lg": ["Plus Jakarta Sans"], "display-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "body-md": ["Inter"], "label-lg": ["Inter"] }, fontSize: { "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }] } } } }</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#0b1326;color:#dae2fd;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-on-surface min-h-screen flex flex-col selection:bg-primary-container selection:text-on-primary"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-20 px-gutter flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0 flex-1"><button aria-label="Go back or close session" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-high transition-colors focus:outline-none flex-shrink-0" onclick="history.back()" type="button"><span class="material-symbols-outlined text-[24px]">close</span></button><div class="flex flex-col min-w-0 flex-1 justify-center"><div class="flex items-center gap-space-xs"><h1 class="font-headline-sm text-headline-sm text-on-surface truncate">Module Summary</h1><span class="inline-flex items-center px-space-xs py-0.5 rounded-full bg-secondary-container/20 text-secondary font-label-sm text-label-sm flex-shrink-0"><span class="w-1.5 h-1.5 rounded-full bg-secondary mr-1 animate-pulse"></span>Active</span></div><p class="font-label-md text-label-md text-on-surface-variant truncate">Module: Advanced Leitner Recall</p></div></div><div class="flex items-center gap-space-sm flex-shrink-0"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col flex-1 relative w-full pt-20 pb-safe bg-surface min-h-screen"><div class="flex flex-col w-full px-gutter pb-space-xl space-y-space-lg">
+<!-- Header Context Badge & Titles -->
+<div class="flex flex-col space-y-space-xs mt-space-sm">
+<div class="flex items-center justify-between">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm tracking-wide">
+<span class="material-symbols-outlined text-[14px]">map</span>
+        HOTSPOT DICTIONARY
+      </span>
+<span class="inline-flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
+        4 Nesne Hazır
+      </span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Görsel Sahne Sözlüğü</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Uluslararası Havalimanı Terminali (B1–B2 Seviyesi)</p>
+</div>
+<!-- Mode Switcher Pill Segment -->
+<div class="flex p-1 bg-surface-container-low rounded-xl shadow-inner">
+<button class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-surface-container-high text-on-surface font-label-md text-label-md shadow-sm transition-all duration-200" id="mode-explore-btn" onclick="switchMode('explore')">
+<span class="material-symbols-outlined text-[18px] text-primary">visibility</span>
+<span>Etiketler Açık</span>
+</button>
+<button class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-on-surface-variant font-label-md text-label-md hover:text-on-surface transition-all duration-200" id="mode-quiz-btn" onclick="switchMode('quiz')">
+<span class="material-symbols-outlined text-[18px]">gps_fixed</span>
+<span>Kör Test: Görselde Bul</span>
+</button>
+</div>
+<!-- Scene Illustration Canvas Frame with Interactive Hotspots -->
+<div class="relative w-full rounded-xl overflow-hidden bg-surface-container-lowest shadow-xl">
+<!-- Visual Image Representation -->
+<div class="relative w-full h-72 sm:h-80 overflow-hidden">
+<img class="w-full h-full object-cover opacity-85 select-none pointer-events-none" data-alt="A stylized sleek isometric 3D render of an ultra-modern international airport terminal interior at twilight with deep indigo and obsidian ambiance. Features a glowing curved baggage claim carousel conveyor belt in the foreground, sleek glass boarding gate signs labeled B1 B2 in the midground, illuminated security checkpoint scanners, and atmospheric warm amber and emerald navigational lights reflecting on polished granite floors in a minimalist LexiLearn futuristic UI aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD38Z-ZQXunWPW8ERKBXmGIdJ7MLjXCgeW-WCVWI49YY84ah_lY5GuSDwTdNySQj3e-J8kJDJhg71cZZpSOT8QYoEuPRWHjcvoPT4gEBS7VWUDl578sfutaN8BoQo1n_wvDM9hxSggxrJbY-uKEgCF2ehxHJXgkYDo8wUsdraqEz8KV7UYfPHd7HP2YYRpnGy8B8jOg9fBjsmDqk2cbmimBUzSWPOa6VIcIC9a04e02wKarnfj_2Ozzgw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-surface-container-lowest/40 pointer-events-none"></div>
+<!-- Blind Quiz Prompt Overlay (Hidden by Default) -->
+<div class="hidden absolute top-3 inset-x-3 bg-surface-container-high/95 backdrop-blur-md rounded-lg p-3 shadow-md flex items-center justify-between z-30 transition-all duration-300" id="quiz-banner">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined text-[18px]">travel_explore</span>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-secondary">HEDEF NESNEYİ DOKUNARAK BUL</div>
+<div class="font-headline-sm text-headline-sm text-on-surface">"Baggage Carousel"</div>
+</div>
+</div>
+<span class="px-2 py-1 rounded bg-surface-container-highest text-tertiary font-label-sm text-label-sm">Hedef #2</span>
+</div>
+<!-- HOTSPOT 1: Boarding Gate / Pass Counter -->
+<button aria-label="Nokta 1: Boarding Pass" class="absolute top-[28%] left-[22%] -translate-x-1/2 -translate-y-1/2 z-20 group focus:outline-none" id="pin-1" onclick="selectHotspot(1)">
+<span class="relative flex h-8 w-8 items-center justify-center">
+<span class="absolute inline-flex h-full w-full rounded-full bg-primary/30 opacity-75"></span>
+<span class="relative inline-flex items-center justify-center rounded-full h-7 w-7 bg-surface-container-high text-primary font-label-md text-label-md shadow-md group-hover:scale-110 transition-transform">1</span>
+</span>
+<span class="hotspot-tag absolute top-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-surface-container-highest/90 backdrop-blur-sm text-on-surface font-label-sm text-label-sm px-2 py-0.5 rounded-full shadow pointer-events-none">
+          Gate &amp; Boarding
+        </span>
+</button>
+<!-- HOTSPOT 2: Baggage Claim Carousel (Active State) -->
+<button aria-label="Nokta 2: Baggage Carousel" class="absolute top-[68%] left-[54%] -translate-x-1/2 -translate-y-1/2 z-20 group focus:outline-none" id="pin-2" onclick="selectHotspot(2)">
+<span class="relative flex h-10 w-10 items-center justify-center">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary/40 opacity-80"></span>
+<span class="absolute inline-flex h-9 w-9 rounded-full bg-secondary-container/50"></span>
+<span class="relative inline-flex items-center justify-center rounded-full h-8 w-8 bg-secondary text-on-secondary font-headline-sm text-headline-sm shadow-lg scale-105 transition-transform">
+            2
+          </span>
+</span>
+<span class="hotspot-tag absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap bg-secondary text-on-secondary font-label-sm text-label-sm px-2.5 py-0.5 rounded-full shadow-lg font-bold pointer-events-none flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">check_circle</span> Carousel
+        </span>
+</button>
+<!-- HOTSPOT 3: Overhead Compartment / Cabin Bag Area -->
+<button aria-label="Nokta 3: Overhead Compartment" class="absolute top-[22%] right-[22%] -translate-x-1/2 -translate-y-1/2 z-20 group focus:outline-none" id="pin-3" onclick="selectHotspot(3)">
+<span class="relative flex h-8 w-8 items-center justify-center">
+<span class="absolute inline-flex h-full w-full rounded-full bg-primary/30 opacity-75"></span>
+<span class="relative inline-flex items-center justify-center rounded-full h-7 w-7 bg-surface-container-high text-primary font-label-md text-label-md shadow-md group-hover:scale-110 transition-transform">3</span>
+</span>
+<span class="hotspot-tag absolute top-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-surface-container-highest/90 backdrop-blur-sm text-on-surface font-label-sm text-label-sm px-2 py-0.5 rounded-full shadow pointer-events-none">
+          Compartment
+        </span>
+</button>
+<!-- HOTSPOT 4: Security Checkpoint Scanner -->
+<button aria-label="Nokta 4: Security Checkpoint" class="absolute top-[48%] right-[12%] -translate-x-1/2 -translate-y-1/2 z-20 group focus:outline-none" id="pin-4" onclick="selectHotspot(4)">
+<span class="relative flex h-8 w-8 items-center justify-center">
+<span class="absolute inline-flex h-full w-full rounded-full bg-primary/30 opacity-75"></span>
+<span class="relative inline-flex items-center justify-center rounded-full h-7 w-7 bg-surface-container-high text-primary font-label-md text-label-md shadow-md group-hover:scale-110 transition-transform">4</span>
+</span>
+<span class="hotspot-tag absolute top-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-surface-container-highest/90 backdrop-blur-sm text-on-surface font-label-sm text-label-sm px-2 py-0.5 rounded-full shadow pointer-events-none">
+          Checkpoint
+        </span>
+</button>
+<!-- Mini Map Hint Pill -->
+<div class="absolute bottom-3 left-3 bg-surface-container-high/80 backdrop-blur-md px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow pointer-events-none">
+<span class="material-symbols-outlined text-[14px] text-tertiary">near_me</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Bölge: Terminal İçi Varış Salonu</span>
+</div>
+</div>
+</div>
+<!-- Quick Selection Strip: All Hotspots in Scene -->
+<div class="flex flex-col space-y-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant tracking-wider uppercase">Sahnedeki Sıcak Noktalar</span>
+<span class="font-label-sm text-label-sm text-primary">Seçim: #2</span>
+</div>
+<div class="grid grid-cols-2 gap-space-xs sm:grid-cols-4">
+<button class="flex items-center gap-2 p-2.5 rounded-xl bg-surface-container text-left hover:bg-surface-container-high transition-colors" id="strip-1" onclick="selectHotspot(1)">
+<span class="w-6 h-6 rounded-full bg-surface-container-highest text-primary flex items-center justify-center font-label-sm text-label-sm flex-shrink-0">1</span>
+<div class="min-w-0">
+<p class="font-label-md text-label-md text-on-surface truncate">Boarding Pass</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant truncate">Biniş Kartı</p>
+</div>
+</button>
+<button class="flex items-center gap-2 p-2.5 rounded-xl bg-secondary-container/20 text-left transition-colors" id="strip-2" onclick="selectHotspot(2)">
+<span class="w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-label-sm text-label-sm flex-shrink-0 font-bold">2</span>
+<div class="min-w-0">
+<p class="font-label-md text-label-md text-secondary truncate font-semibold">Carousel</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant truncate">Bagaj Bandı</p>
+</div>
+</button>
+<button class="flex items-center gap-2 p-2.5 rounded-xl bg-surface-container text-left hover:bg-surface-container-high transition-colors" id="strip-3" onclick="selectHotspot(3)">
+<span class="w-6 h-6 rounded-full bg-surface-container-highest text-primary flex items-center justify-center font-label-sm text-label-sm flex-shrink-0">3</span>
+<div class="min-w-0">
+<p class="font-label-md text-label-md text-on-surface truncate">Overhead Bin</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant truncate">Başüstü Dolap</p>
+</div>
+</button>
+<button class="flex items-center gap-2 p-2.5 rounded-xl bg-surface-container text-left hover:bg-surface-container-high transition-colors" id="strip-4" onclick="selectHotspot(4)">
+<span class="w-6 h-6 rounded-full bg-surface-container-highest text-primary flex items-center justify-center font-label-sm text-label-sm flex-shrink-0">4</span>
+<div class="min-w-0">
+<p class="font-label-md text-label-md text-on-surface truncate">Security Point</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant truncate">Güvenlik Girişi</p>
+</div>
+</button>
+</div>
+</div>
+<!-- Dynamic Detail Card: Active Hotspot Focus (Item #2 Carousel) -->
+<div class="flex flex-col bg-surface-container rounded-xl p-space-md shadow-xl space-y-space-md" id="hotspot-detail-card">
+<!-- Top Word Row & Pronunciation -->
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-secondary-container/20 text-secondary font-label-sm text-label-sm">Hotspot #2 • Konveyör</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">• İsim (Noun)</span>
+</div>
+<h3 class="font-headline-lg text-headline-lg text-on-surface tracking-tight mt-1 truncate" id="card-term">
+          BAGGAGE CAROUSEL
+        </h3>
+<p class="font-label-md text-label-md text-primary font-mono" id="card-phonetic">
+          /ˈbæɡ.ɪdʒ kær.əˌsel/
+        </p>
+</div>
+<!-- Quick Audio Playback Interaction -->
+<button aria-label="Kelime telaffuzunu dinle" class="flex-shrink-0 w-12 h-12 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-primary flex items-center justify-center shadow-md active:scale-95 transition-transform" onclick="playWordAudio()">
+<span class="material-symbols-outlined text-[24px]" id="audio-icon">volume_up</span>
+</button>
+</div>
+<!-- Turkish Meaning Anchor Box -->
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-secondary flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">translate</span>
+</div>
+<div class="min-w-0">
+<div class="font-label-sm text-label-sm text-on-surface-variant">Türkçe Karşılık</div>
+<div class="font-body-md text-body-md text-on-surface font-semibold truncate" id="card-meaning">
+          Bagaj alım bandı / konveyörü
+        </div>
+</div>
+</div>
+<!-- Collocations & Key Verb Patterns -->
+<div class="flex flex-col space-y-space-xs">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">hub</span>
+<span>BAĞLANTILI EYLEMLER &amp; KRİTİK KALIPLAR</span>
+</div>
+<div class="space-y-1.5" id="card-collocations">
+<div class="flex items-start gap-2.5 p-2 rounded-lg bg-surface-container-high/60">
+<span class="material-symbols-outlined text-[16px] text-secondary mt-0.5">check_small</span>
+<div class="min-w-0">
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">claim your baggage</span>
+<span class="text-on-surface-variant font-body-sm text-body-sm"> — bagajını teslim almak</span>
+</div>
+</div>
+<div class="flex items-start gap-2.5 p-2 rounded-lg bg-surface-container-high/60">
+<span class="material-symbols-outlined text-[16px] text-secondary mt-0.5">check_small</span>
+<div class="min-w-0">
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">retrieve the luggage from the carousel</span>
+<span class="text-on-surface-variant font-body-sm text-body-sm"> — banttan valizi almak</span>
+</div>
+</div>
+<div class="flex items-start gap-2.5 p-2 rounded-lg bg-surface-container-high/60">
+<span class="material-symbols-outlined text-[16px] text-secondary mt-0.5">check_small</span>
+<div class="min-w-0">
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">wait at the carousel</span>
+<span class="text-on-surface-variant font-body-sm text-body-sm"> — bantta beklemek</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Authentic Example Sentence Card -->
+<div class="p-3 rounded-lg bg-surface-container-highest/40 flex flex-col space-y-1">
+<div class="flex items-center gap-1.5 text-primary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">format_quote</span>
+<span>ÖRNEK KULLANIM (HAVALİMANI ANONSU)</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface italic" id="card-example">
+        "Passengers are requested to proceed to carousel 4 to collect their checked bags."
+      </p>
+<p class="font-label-md text-label-md text-on-surface-variant" id="card-example-tr">
+        (Yolcuların kayıtlı valizlerini teslim almak üzere 4 numaralı banda geçmeleri rica olunur.)
+      </p>
+</div>
+<!-- Action Bar: Add to Box 1 & SRS Leitner System -->
+<div class="flex flex-col sm:flex-row gap-space-sm pt-space-xs">
+<button class="flex-1 h-14 px-4 rounded-xl bg-primary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all" id="add-to-box-btn" onclick="addToBox1()">
+<span class="material-symbols-outlined text-[20px]">library_add</span>
+<span>+ Bu Kelimeyi &amp; Kalıbı Kutu 1'e Ekle</span>
+</button>
+<button class="h-14 px-4 rounded-xl bg-surface-container-high text-on-surface font-label-lg text-label-lg flex items-center justify-center gap-2 hover:bg-surface-container-highest transition-colors" onclick="playWordAudio()">
+<span class="material-symbols-outlined text-[20px]">volume_up</span>
+<span>Sesli Dinle</span>
+</button>
+</div>
+</div>
+<!-- Bottom Interactive Trigger: Launch Visual Puzzle Game -->
+<div class="w-full pt-space-xs">
+<button class="w-full h-14 rounded-xl bg-gradient-to-r from-secondary-container via-secondary to-primary text-on-secondary-container font-headline-sm text-headline-sm flex items-center justify-center gap-3 shadow-xl active:scale-95 transition-all" onclick="launchVisualQuiz()">
+<span class="material-symbols-outlined text-[24px]">sports_esports</span>
+<span>Görsel Bulmaca Testini Başlat</span>
+</button>
+<div class="flex items-center justify-center gap-2 mt-2">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Hafıza pekiştirme için 60 saniyelik görsel nesne bulma modu</span>
+</div>
+</div>
+<!-- Feedback Toast Notification Container -->
+<div class="fixed bottom-6 inset-x-gutter max-w-sm mx-auto p-3.5 rounded-xl bg-surface-container-highest text-on-surface shadow-2xl flex items-center gap-3 transform translate-y-28 opacity-0 pointer-events-none transition-all duration-300 z-50" id="toast">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center flex-shrink-0" id="toast-icon-wrap">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</div>
+<div class="min-w-0 flex-1">
+<p class="font-label-md text-label-md font-semibold text-on-surface" id="toast-title">Leitner Kutusuna Eklendi!</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant truncate" id="toast-desc">Kelime Kutu 1'e yerleştirildi, yarın tekrar edilecek.</p>
+</div>
+</div>
+</div>
+<script>
+  // Hotspot Knowledge Base Data Store
+  const hotspotsData = {
+    1: {
+      id: 1,
+      name: "BOARDING PASS",
+      phonetic: "/ˈbɔːr.dɪŋ ˌpæs/",
+      category: "İsim (Noun)",
+      badge: "Hotspot #1 • Geçiş Belgesi",
+      meaning: "Biniş kartı / Uçuş kuponu",
+      collocations: [
+        { en: "show your boarding pass", tr: "biniş kartını ibraz etmek" },
+        { en: "print a digital boarding pass", tr: "dijital biniş kartı çıkarmak" },
+        { en: "proceed to the boarding gate", tr: "biniş kapısına yönelmek" }
+      ],
+      example: "Please have your boarding pass and passport ready at the gate.",
+      exampleTr: "(Lütfen kapıda biniş kartınız ve pasaportunuz hazır bulunsun.)"
+    },
+    2: {
+      id: 2,
+      name: "BAGGAGE CAROUSEL",
+      phonetic: "/ˈbæɡ.ɪdʒ kær.əˌsel/",
+      category: "İsim (Noun)",
+      badge: "Hotspot #2 • Konveyör",
+      meaning: "Bagaj alım bandı / konveyörü",
+      collocations: [
+        { en: "claim your baggage", tr: "bagajını teslim almak" },
+        { en: "retrieve luggage from carousel", tr: "banttan valizi almak" },
+        { en: "wait at the carousel", tr: "bantta beklemek" }
+      ],
+      example: "Passengers are requested to proceed to carousel 4 to collect their checked bags.",
+      exampleTr: "(Yolcuların kayıtlı valizlerini teslim almak üzere 4 numaralı banda geçmeleri rica olunur.)"
+    },
+    3: {
+      id: 3,
+      name: "OVERHEAD COMPARTMENT",
+      phonetic: "/ˌoʊ.vɚ.hed kəmˈpɑːrt.mənt/",
+      category: "İsim (Noun)",
+      badge: "Hotspot #3 • Kabin İçi",
+      meaning: "Başüstü dolabı / el bagajı bölmesi",
+      collocations: [
+        { en: "stow luggage in overhead bin", tr: "valizi başüstü dolabına yerleştirmek" },
+        { en: "close the compartment latch", tr: "dolap mandalını kapatmak" },
+        { en: "fit your carry-on bag", tr: "el çantasını sığdırmak" }
+      ],
+      example: "All carry-on items must be placed securely inside the overhead compartment.",
+      exampleTr: "(Tüm el eşyaları başüstü dolabına güvenli bir şekilde yerleştirilmelidir.)"
+    },
+    4: {
+      id: 4,
+      name: "SECURITY CHECKPOINT",
+      phonetic: "/səˈkjʊr.ə.t̬i ˈtʃek.pɔɪnt/",
+      category: "İsim (Noun)",
+      badge: "Hotspot #4 • Kontrol Hattı",
+      meaning: "Havalimanı güvenlik kontrol noktası",
+      collocations: [
+        { en: "pass through security", tr: "güvenlik kontrolünden geçmek" },
+        { en: "place liquids in a clear bag", tr: "sıvıları şeffaf poşete koymak" },
+        { en: "metal detector screening", tr: "metal detektörü taraması" }
+      ],
+      example: "Allow extra time to clear the security checkpoint before boarding.",
+      exampleTr: "(Binişten önce güvenlik kontrol noktasından geçmek için ek süre ayırınız.)"
+    }
+  };
+
+  let currentHotspotId = 2;
+  let isQuizMode = false;
+
+  function selectHotspot(id) {
+    currentHotspotId = id;
+    const data = hotspotsData[id];
+    if (!data) return;
+
+    // Update Detail Card Content
+    document.getElementById('card-term').textContent = data.name;
+    document.getElementById('card-phonetic').textContent = data.phonetic;
+    document.getElementById('card-meaning').textContent = data.meaning;
+    document.getElementById('card-example').textContent = '"' + data.example + '"';
+    document.getElementById('card-example-tr').textContent = data.exampleTr;
+
+    // Render Collocations
+    const colDiv = document.getElementById('card-collocations');
+    colDiv.innerHTML = data.collocations.map(c => `
+      <div class="flex items-start gap-2.5 p-2 rounded-lg bg-surface-container-high/60">
+        <span class="material-symbols-outlined text-[16px] text-secondary mt-0.5">check_small</span>
+        <div class="min-w-0">
+          <span class="font-body-sm text-body-sm text-on-surface font-semibold">${c.en}</span>
+          <span class="text-on-surface-variant font-body-sm text-body-sm"> — ${c.tr}</span>
+        </div>
+      </div>
+    `).join('');
+
+    // Update Visual Hotspot Pins Styling
+    [1, 2, 3, 4].forEach(n => {
+      const pin = document.getElementById('pin-' + n);
+      const stripBtn = document.getElementById('strip-' + n);
+      if (pin) {
+        if (n === id) {
+          pin.innerHTML = `
+            <span class="relative flex h-10 w-10 items-center justify-center">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary/40 opacity-80"></span>
+              <span class="absolute inline-flex h-9 w-9 rounded-full bg-secondary-container/50"></span>
+              <span class="relative inline-flex items-center justify-center rounded-full h-8 w-8 bg-secondary text-on-secondary font-headline-sm text-headline-sm shadow-lg scale-105 transition-transform">${n}</span>
+            </span>
+            <span class="hotspot-tag absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap bg-secondary text-on-secondary font-label-sm text-label-sm px-2.5 py-0.5 rounded-full shadow-lg font-bold pointer-events-none flex items-center gap-1">
+              <span class="material-symbols-outlined text-[12px]">check_circle</span> ${data.name.split(' ')[0]}
+            </span>
+          `;
+        } else {
+          pin.innerHTML = `
+            <span class="relative flex h-8 w-8 items-center justify-center">
+              <span class="absolute inline-flex h-full w-full rounded-full bg-primary/30 opacity-75"></span>
+              <span class="relative inline-flex items-center justify-center rounded-full h-7 w-7 bg-surface-container-high text-primary font-label-md text-label-md shadow-md group-hover:scale-110 transition-transform">${n}</span>
+            </span>
+            <span class="hotspot-tag absolute top-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-surface-container-highest/90 backdrop-blur-sm text-on-surface font-label-sm text-label-sm px-2 py-0.5 rounded-full shadow pointer-events-none">
+              ${hotspotsData[n].name.split(' ')[0]}
+            </span>
+          `;
+        }
+      }
+
+      // Update Strip highlight
+      if (stripBtn) {
+        if (n === id) {
+          stripBtn.className = "flex items-center gap-2 p-2.5 rounded-xl bg-secondary-container/20 text-left transition-colors";
+          stripBtn.querySelector('span').className = "w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-label-sm text-label-sm flex-shrink-0 font-bold";
+          stripBtn.querySelector('p').className = "font-label-md text-label-md text-secondary truncate font-semibold";
+        } else {
+          stripBtn.className = "flex items-center gap-2 p-2.5 rounded-xl bg-surface-container text-left hover:bg-surface-container-high transition-colors";
+          stripBtn.querySelector('span').className = "w-6 h-6 rounded-full bg-surface-container-highest text-primary flex items-center justify-center font-label-sm text-label-sm flex-shrink-0";
+          stripBtn.querySelector('p').className = "font-label-md text-label-md text-on-surface truncate";
+        }
+      }
+    });
+
+    if (isQuizMode && id === 2) {
+      showToast("Tebrikler! Doğru Hedef", "Baggage Carousel doğru tespit edildi.", "task_alt");
+    }
+  }
+
+  function switchMode(mode) {
+    const exploreBtn = document.getElementById('mode-explore-btn');
+    const quizBtn = document.getElementById('mode-quiz-btn');
+    const banner = document.getElementById('quiz-banner');
+    const tags = document.querySelectorAll('.hotspot-tag');
+
+    if (mode === 'quiz') {
+      isQuizMode = true;
+      exploreBtn.className = "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-on-surface-variant font-label-md text-label-md hover:text-on-surface transition-all duration-200";
+      quizBtn.className = "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-surface-container-high text-secondary font-label-md text-label-md shadow-sm transition-all duration-200";
+      banner.classList.remove('hidden');
+      tags.forEach(t => t.classList.add('opacity-0'));
+      showToast("Kör Test Başladı", "Görsel üzerinde 'Baggage Carousel' noktasını bulup dokunun!", "gps_fixed");
+    } else {
+      isQuizMode = false;
+      quizBtn.className = "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-on-surface-variant font-label-md text-label-md hover:text-on-surface transition-all duration-200";
+      exploreBtn.className = "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-surface-container-high text-on-surface font-label-md text-label-md shadow-sm transition-all duration-200";
+      banner.classList.add('hidden');
+      tags.forEach(t => t.classList.remove('opacity-0'));
+    }
+  }
+
+  function playWordAudio() {
+    const icon = document.getElementById('audio-icon');
+    icon.textContent = 'graphic_eq';
+    icon.classList.add('animate-pulse', 'text-secondary');
+    
+    // Play Native SpeechSynthesis if available
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(hotspotsData[currentHotspotId].name);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    setTimeout(() => {
+      icon.textContent = 'volume_up';
+      icon.classList.remove('animate-pulse', 'text-secondary');
+    }, 1200);
+  }
+
+  function addToBox1() {
+    const item = hotspotsData[currentHotspotId];
+    showToast("Leitner Kutusuna Eklendi!", `"${item.name}" başarıyla Kutu 1'e aktarıldı.`, "inventory_2");
+    
+    // Tactile button effect
+    const btn = document.getElementById('add-to-box-btn');
+    btn.classList.add('bg-secondary-container', 'text-on-secondary-container');
+    setTimeout(() => {
+      btn.classList.remove('bg-secondary-container', 'text-on-secondary-container');
+    }, 1000);
+  }
+
+  function launchVisualQuiz() {
+    switchMode('quiz');
+    const scene = document.querySelector('img');
+    if (scene) {
+      scene.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  function showToast(title, desc, iconName) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toast-title').textContent = title;
+    document.getElementById('toast-desc').textContent = desc;
+    document.querySelector('#toast-icon-wrap span').textContent = iconName || 'check';
+
+    toast.classList.remove('translate-y-28', 'opacity-0', 'pointer-events-none');
+    toast.classList.add('translate-y-0', 'opacity-100');
+
+    setTimeout(() => {
+      toast.classList.add('translate-y-28', 'opacity-0', 'pointer-events-none');
+      toast.classList.remove('translate-y-0', 'opacity-100');
+    }, 2800);
+  }
+</script></main></body></html>
