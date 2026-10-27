@@ -1,4 +1,14 @@
-/** Tarayıcının Web Speech API'si üzerinden metin okuma (TTS) ve konuşma tanıma (STT). */
+/**
+ * Metin okuma (TTS) ve konuşma tanıma (STT).
+ * Tarayıcıda Web Speech API, Android uygulamasında ise cihazın yerel ses servisleri kullanılır
+ * (Android WebView konuşma tanımayı desteklemez).
+ */
+
+import { Capacitor } from '@capacitor/core';
+import { SpeechRecognition } from '@capacitor-community/speech-recognition';
+import { TextToSpeech } from '@capacitor-community/text-to-speech';
+
+const isNative = Capacitor.isNativePlatform();
 
 let cachedVoices: SpeechSynthesisVoice[] = [];
 
@@ -15,7 +25,7 @@ if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
 }
 
 export function canSpeak(): boolean {
-  return typeof window !== 'undefined' && 'speechSynthesis' in window;
+  return isNative || (typeof window !== 'undefined' && 'speechSynthesis' in window);
 }
 
 export interface SpeakOptions {
@@ -28,6 +38,12 @@ export interface SpeakOptions {
 export function speak(text: string, opts: SpeakOptions = {}): void {
   if (!canSpeak() || !text) {
     opts.onEnd?.();
+    return;
+  }
+  if (isNative) {
+    // Varsayılan "Flush" stratejisi önceki okumayı keser; kelime sınırı olayı yerel tarafta yoktur.
+    const done = () => opts.onEnd?.();
+    TextToSpeech.speak({ text, lang: opts.lang ?? 'en-US', rate: opts.rate ?? 0.9 }).then(done, done);
     return;
   }
   const synth = window.speechSynthesis;
@@ -62,7 +78,8 @@ export function speakSequence(parts: { text: string; lang?: string; rate?: numbe
 }
 
 export function stopSpeaking(): void {
-  if (canSpeak()) window.speechSynthesis.cancel();
+  if (isNative) void TextToSpeech.stop().catch(() => {});
+  else if (canSpeak()) window.speechSynthesis.cancel();
 }
 
 // ── Konuşma tanıma ──
@@ -91,7 +108,32 @@ function recognitionCtor(): RecognitionCtor | null {
 }
 
 export function canRecognize(): boolean {
-  return typeof window !== 'undefined' && recognitionCtor() !== null;
+  return isNative || (typeof window !== 'undefined' && recognitionCtor() !== null);
+}
+
+function listenNative(
+  lang: string,
+  onResult: (alternatives: RecognitionResultLike[]) => void,
+  onError?: (error: string) => void,
+  onEnd?: () => void,
+): RecognitionHandle {
+  void (async () => {
+    try {
+      const perm = await SpeechRecognition.requestPermissions();
+      if (perm.speechRecognition !== 'granted') {
+        onError?.('not-allowed');
+        return;
+      }
+      const res = await SpeechRecognition.start({ language: lang, maxResults: 5, partialResults: false, popup: false });
+      // Yerel servis güven skoru döndürmez; sıralama en olası sonuçtan başlar.
+      onResult((res.matches ?? []).map((t, i) => ({ transcript: t, confidence: i === 0 ? 0.9 : 0.6 })));
+    } catch {
+      onError?.('no-match');
+    } finally {
+      onEnd?.();
+    }
+  })();
+  return { stop: () => void SpeechRecognition.stop().catch(() => {}) };
 }
 
 export interface RecognitionHandle {
@@ -104,6 +146,7 @@ export function listen(
   onError?: (error: string) => void,
   onEnd?: () => void,
 ): RecognitionHandle | null {
+  if (isNative) return listenNative(lang, onResult, onError, onEnd);
   const Ctor = recognitionCtor();
   if (!Ctor) {
     onError?.('unsupported');

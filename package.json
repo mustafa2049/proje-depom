@@ -2,22 +2,32 @@
   "name": "lexilearn",
   "private": true,
   "version": "1.0.0",
-  "description": "LexiLearn — Leitner aralıklı tekrar sistemiyle İngilizce kelime öğrenme uygulaması",
+  "description": "LexiLearn \u2014 Leitner aral\u0131kl\u0131 tekrar sistemiyle \u0130ngilizce kelime \u00f6\u011frenme uygulamas\u0131",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "build:android": "tsc -b && CAPACITOR=1 vite build && cap sync android",
+    "apk": "npm run build:android && cd android && ./gradlew assembleDebug"
   },
   "dependencies": {
+    "@capacitor-community/speech-recognition": "^7.0.1",
+    "@capacitor-community/text-to-speech": "^8.0.2",
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/plus-jakarta-sans": "^5.3.0",
+    "material-symbols": "^0.48.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.4",
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

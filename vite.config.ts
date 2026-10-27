@@ -4,10 +4,14 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 // Göreli base: uygulama GitHub Pages gibi bir alt dizinde de çalışır (HashRouter kullanılıyor).
+// Android (Capacitor) derlemesinde service worker gerekmez; dosyalar zaten uygulamanın içindedir.
+const isNative = process.env.CAPACITOR === '1';
+
 export default defineConfig({
   base: './',
   plugins: [
     react(),
+    !isNative &&
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['images/*'],
@@ -27,18 +31,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,png,jpg,svg,webmanifest}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts',
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-        ],
+        globPatterns: ['**/*.{js,css,html,png,jpg,svg,woff2,webmanifest}'],
+        // Material Symbols yazı tipi ~4 MB; çevrimdışı ikonlar için önbelleğe alınmalı.
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
       },
     }),
   ],

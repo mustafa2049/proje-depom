@@ -15,6 +15,22 @@ npm run preview   # derlenmiş sürümü önizle
 npm test          # birim testleri
 ```
 
+## Android (APK)
+
+Uygulama [Capacitor](https://capacitorjs.com) ile Android'e paketlenir (`android/` klasörü).
+Android'de seslendirme ve konuşma tanıma cihazın kendi servisleriyle çalışır.
+
+```bash
+npm run build:android                 # web derlemesi + android/ klasörüne kopyalama
+cd android && ./gradlew assembleDebug # → android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Gereksinimler: JDK 21 ve Android SDK (platform 36). `android/local.properties` dosyasına
+`sdk.dir=/android/sdk/yolu` yazılmalı (veya `ANDROID_HOME` tanımlı olmalı).
+APK depodaki sabit hata ayıklama anahtarıyla (`android/app/lexilearn-debug.keystore`) imzalanır;
+böylece yeni sürümler eskisinin üzerine, veriler silinmeden kurulabilir. Google Play'e yüklemek için
+ayrı bir yayın anahtarı oluşturulmalıdır.
+
 `dist/` klasörü herhangi bir statik sunucuya (GitHub Pages, Netlify, Vercel…) olduğu gibi yüklenebilir.
 Yönlendirme `#/` tabanlı olduğu için ek sunucu ayarı gerekmez.
 
