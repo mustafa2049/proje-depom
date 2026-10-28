@@ -19,12 +19,18 @@ VOICE = 'af_heart'
 SPEED = 0.9
 SR = 24000
 POS_KEYS = {'noun': 'NOUN', 'verb': 'VERB', 'adjective': 'ADJ', 'adverb': 'ADV'}
+# Kokoro çok kısa girdilerde bazen kelimenin önüne kısa bir "ı/a" sesi ekliyor ("seed" → "a seed",
+# "set up" → "is that up"). Kelime ve kalıplar bu yüzden bir taşıyıcı cümlenin ardından üretilip
+# aradaki sessizlikten kesilir.
+CARRIER = 'Okay.'
 
 
-def unique_tasks(items, skip_dir):
+def unique_tasks(items, skip_dir, kind=None):
     """Anahtara göre tekilleştirir; türü belli sözlük kelimesi önceliklidir."""
     by_key = {}
     for x in items:
+        if kind and x['kind'] != kind:
+            continue
         cur = by_key.get(x['key'])
         if cur is None or (not cur.get('pos') and x.get('pos')):
             by_key[x['key']] = x
@@ -55,6 +61,20 @@ def spoken_input(x, lexicon):
     end = '' if text[-1] in '.!?' else '.'
     ph = homograph_phonemes(lexicon, text, x.get('pos'))
     return f'[{text}](/{ph}/){end}' if ph else text + end
+
+
+def cut_after_carrier(a, toks):
+    """Taşıyıcının noktasıyla hedefin ilk sözcüğü arasındaki en sessiz 10 ms'yi döner; bulunamazsa None."""
+    import numpy as np
+
+    stop = next((i for i, t in enumerate(toks) if t[0].strip() == '.'), None)
+    if stop is None or stop + 1 >= len(toks):
+        return None
+    lo, hi = int(toks[stop][2] * SR), int(toks[stop + 1][1] * SR)
+    if hi - lo < 480:
+        lo = max(0, hi - int(0.1 * SR))
+    frames = [(float(np.sqrt(np.mean(a[i:i + 240] ** 2))), i) for i in range(lo, max(lo + 1, hi - 240), 240)]
+    return min(frames)[1] if frames else hi
 
 
 def char_offsets(original, tokens):
@@ -90,6 +110,9 @@ def worker(idx, n, tasks, out_dir):
         if os.path.exists(meta_path):
             continue
         text_in = spoken_input(x, lexicon)
+        single = x['kind'] == 'word'
+        if single:
+            text_in = f'{CARRIER} {text_in}'
         parts, toks, offset, phonemes = [], [], 0.0, []
         for r in pipe(text_in, voice=VOICE, speed=SPEED):
             if r.audio is None:
@@ -97,7 +120,7 @@ def worker(idx, n, tasks, out_dir):
             a = r.audio.numpy()
             for tk in r.tokens or []:
                 if tk.start_ts is not None:
-                    toks.append((tk.text, tk.start_ts + offset))
+                    toks.append((tk.text, tk.start_ts + offset, (tk.end_ts or tk.start_ts) + offset))
             parts.append(a)
             phonemes.append(r.phonemes)
             offset += len(a) / SR
@@ -105,6 +128,13 @@ def worker(idx, n, tasks, out_dir):
             print(f'[{idx}] BOŞ: {x["text"]!r}', flush=True)
             continue
         a = np.concatenate(parts)
+        if single:
+            cut = cut_after_carrier(a, toks)
+            if cut is None:
+                print(f'[{idx}] TAŞIYICI KESİLEMEDİ: {x["text"]!r}', flush=True)
+                continue
+            a = a[cut:]
+            toks = [(t, s - cut / SR, e - cut / SR) for (t, s, e) in toks if s >= cut / SR]
         loud = np.where(np.abs(a) > 0.003)[0]
         if not len(loud):
             print(f'[{idx}] SESSİZ: {x["text"]!r}', flush=True)
@@ -125,7 +155,7 @@ def worker(idx, n, tasks, out_dir):
             'input': text_in,
             'phonemes': ' '.join(phonemes),
             'd': round(len(a) / SR * 1000),
-            't': char_offsets(x['text'], [(t, max(0.0, ts - lead)) for t, ts in toks]),
+            't': char_offsets(x['text'], [(t, max(0.0, ts - lead)) for t, ts, _ in toks]),
         }
         with open(meta_path, 'w') as f:
             json.dump(meta, f, ensure_ascii=False)
@@ -141,9 +171,10 @@ if __name__ == '__main__':
     ap.add_argument('out_dir')
     ap.add_argument('--workers', type=int, default=4)
     ap.add_argument('--skip', help='Bu klasörde .ogg kaydı olan anahtarları atla (ör. public/voice)')
+    ap.add_argument('--kind', choices=['word', 'sentence'], help='Yalnızca bu türdeki metinleri seslendir')
     args = ap.parse_args()
     os.makedirs(args.out_dir, exist_ok=True)
-    tasks = unique_tasks(json.load(open(args.texts)), args.skip)
+    tasks = unique_tasks(json.load(open(args.texts)), args.skip, args.kind)
     print(f'{len(tasks)} metin seslendirilecek, {args.workers} işçi', flush=True)
     procs = [Process(target=worker, args=(i, args.workers, tasks, args.out_dir)) for i in range(args.workers)]
     for p in procs:
