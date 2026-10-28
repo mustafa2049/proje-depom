@@ -6,6 +6,7 @@ import { Sheet } from '../components/Sheet';
 import { ActivityCalendar, ReviewForecast } from '../components/StatsCharts';
 import { StudySettings, Toggle } from '../components/StudySettings';
 import { useToast } from '../components/Toast';
+import { VoiceSettings } from '../components/VoiceSettings';
 import { cx, Icon } from '../components/ui';
 import { lastAutoBackup, nativeFiles } from '../lib/backup';
 import { exportAnki, exportBackup } from '../lib/exporters';
@@ -400,6 +401,7 @@ export default function Profile() {
             aria-label="Telaffuz hızı"
           />
         </div>
+        <VoiceSettings />
         <StudySettings />
         <AiSettings />
         <button

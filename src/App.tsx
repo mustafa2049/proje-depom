@@ -10,6 +10,7 @@ import { runBackHandlers } from './lib/backButton';
 import { autoBackup } from './lib/backup';
 import { dayKey } from './lib/leitner';
 import { cancelReminders, remindersSupported, scheduleReminders } from './lib/reminders';
+import { configureSpeech } from './lib/speech';
 import { AppStoreProvider, useStore } from './store/AppStore';
 import { dailyPlan, streak } from './store/selectors';
 
@@ -59,6 +60,15 @@ function ReminderSync() {
       // Bildirim servisi kullanılamıyorsa uygulama normal çalışmaya devam eder.
     });
   }, [enabled, hour, minute, studiedToday, s, due]);
+  return null;
+}
+
+/** Ses ayarlarını okuma katmanına iletir (ekranlardan önce kurulur ki ilk okuma da doğru sesle olsun). */
+function SpeechSync() {
+  const { voiceMode, aiVoice, deviceVoice } = useStore().state.profile;
+  useEffect(() => {
+    configureSpeech({ natural: voiceMode === 'natural', aiVoice, deviceVoice });
+  }, [voiceMode, aiVoice, deviceVoice]);
   return null;
 }
 
@@ -117,6 +127,7 @@ export default function App() {
     <AppStoreProvider>
       <ToastProvider>
         <ReminderSync />
+        <SpeechSync />
         <HashRouter>
           <ScrollToTop />
           <NativeBridge />

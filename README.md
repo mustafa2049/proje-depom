@@ -18,7 +18,7 @@ npm test          # birim testleri
 ## Android (APK)
 
 Uygulama [Capacitor](https://capacitorjs.com) ile Android'e paketlenir (`android/` klasörü).
-Android'de seslendirme ve konuşma tanıma cihazın kendi servisleriyle çalışır.
+Android'de konuşma tanıma ve (doğal ses kaydı olmayan metinlerde) seslendirme cihazın kendi servisleriyle çalışır.
 
 ```bash
 npm run build:android                 # web derlemesi + android/ klasörüne kopyalama
@@ -127,12 +127,30 @@ Yapay zekâ özellikleri (anahtar ve internet varsa görünür):
 Anahtar uygulama içinden de değiştirilebilir: Profil → Ayarlar → Yapay Zekâ (Groq).
 Gömülü anahtar APK'dan okunabilir; bu yüzden APK yalnızca kişisel kullanım içindir, paylaşılmamalıdır.
 
+## Okuma sesi
+
+İngilizce metinler önce **doğal sesle** okunur (Profil → Ayarlar → Okuma Sesi):
+
+1. **Hazır kayıtlar:** sözlükteki 2442 kelime, tüm örnek cümleler ve modül metinleri (hikâyeler, film
+   replikleri, kalıplar) [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) modeliyle seslendirilip
+   `public/voice/` altına Ogg Opus olarak gömülüdür (~20 MB). İnternet gerekmez, anında çalar. Eş yazımlı
+   kelimeler (live, close, affect…) sözlükteki türüne göre okunur; hikâyelerde kelime vurgusu kayıttaki
+   kelime zamanlarıyla eşlenir. Yeniden üretme adımları: `scripts/voice/README.md`.
+2. **Yapay zekâ sesi:** kayıtta olmayan metinler (sohbet partneri, yapay zekâ cümleleri, kendi eklediğin
+   kelimeler) çevrimiçiyken Groq Orpheus (`canopylabs/orpheus-v1-english`) ile okunur ve cihazda önbelleğe
+   alınır. Modelin kullanım şartlarının Groq hesabında bir kez onaylanması gerekir
+   ([console.groq.com](https://console.groq.com/playground?model=canopylabs%2Forpheus-v1-english));
+   ücretsiz katmanda günde ~100 istek / 3600 karakter sınırı vardır.
+3. İkisi de yoksa cihazın ses motoru kullanılır; Ayarlar'dan cihazdaki İngilizce ses seçilebilir.
+
+Telaffuz hızı kayıtlarda da geçerlidir (kayıtlar 0.9x hızında üretildi; perde korunarak hızlandırılır/yavaşlatılır).
+
 ## Teknik notlar
 
 - React 19 + TypeScript + Vite + Tailwind CSS; renk ve yazı tipi token'ları `tailwind.config.js` içinde.
 - Veriler `localStorage`'da (`lexilearn:state:v1`) tutulur; sunucu ya da hesap gerekmez.
-- Telaffuz ve konuşma tanıma tarayıcının Web Speech API'sini kullanır (en iyi Chrome / Edge'de çalışır).
-  Desteklenmeyen tarayıcılarda ilgili butonlar devre dışı kalır veya adım atlanır.
+- Doğal ses kaydı olmayan metinlerin okunması ve konuşma tanıma tarayıcının Web Speech API'sini kullanır
+  (en iyi Chrome / Edge'de çalışır). Desteklenmeyen tarayıcılarda ilgili butonlar devre dışı kalır veya adım atlanır.
 - Kelime otomatik doldurma internet gerektirir: [Free Dictionary API](https://dictionaryapi.dev) (fonetik, örnek)
   ve [MyMemory](https://mymemory.translated.net) (Türkçe çeviri). Sonuçları kaydetmeden önce kontrol edin.
 - OCR, [Tesseract.js](https://tesseract.projectnaptha.com) ile cihazda çalışır; ilk kullanımda dil verisi indirilir.

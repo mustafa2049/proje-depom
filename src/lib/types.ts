@@ -116,9 +116,17 @@ export interface Profile {
   newWordOrder: NewWordOrder;
   /** Seviye yolunun başladığı seviye (altındaki kelimeler atlanır) */
   startLevel: Cefr;
+  /** İngilizce okuma sesi: doğal ses (hazır kayıtlar + yapay zekâ) ya da yalnızca cihazın ses motoru */
+  voiceMode: VoiceMode;
+  /** Kayıtta olmayan İngilizce metinleri Groq Orpheus ile oku (çevrimiçi) */
+  aiVoice: boolean;
+  /** Cihaz sesi kullanıldığında seçilen İngilizce ses (boşsa sistem varsayılanı) */
+  deviceVoice: string;
 }
 
 export type NewWordOrder = 'level' | 'deck';
+
+export type VoiceMode = 'natural' | 'device';
 
 export type CardDirection = 'en-tr' | 'tr-en' | 'mixed';
 

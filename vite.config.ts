@@ -34,6 +34,19 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,png,jpg,svg,woff2,webmanifest}'],
         // Material Symbols yazı tipi ~4 MB; çevrimdışı ikonlar için önbelleğe alınmalı.
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+        // ~5000 ses kaydı ön belleğe alınmaz; çalındıkça saklanır (adları metnin özeti olduğundan değişmez).
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.includes('/voice/') && url.pathname.endsWith('.ogg'),
+            handler: 'CacheFirst',
+            options: { cacheName: 'lexilearn-voice', expiration: { maxEntries: 6000 } },
+          },
+          {
+            urlPattern: ({ url }) => url.pathname.endsWith('/voice/index.json'),
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'lexilearn-voice-index' },
+          },
+        ],
       },
     }),
   ],

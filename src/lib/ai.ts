@@ -10,6 +10,9 @@ const CHAT_MODEL = 'openai/gpt-oss-120b';
 /** Türkçe kelime oyunlarında (hafıza ipucu) daha başarılı model */
 export const CREATIVE_MODEL = 'qwen/qwen3.8-27b';
 const STT_MODEL = 'whisper-large-v3-turbo';
+const TTS_MODEL = 'canopylabs/orpheus-v1-english';
+/** Hazır kayıtlardaki Kokoro sesine (kadın, Amerikan) en yakın Orpheus sesi */
+const TTS_VOICE = 'hannah';
 const KEY_STORAGE = 'lexilearn:groqKey';
 
 export function getStoredKey(): string {
@@ -44,7 +47,7 @@ export function aiAvailable(): boolean {
 export class AiError extends Error {}
 
 /** Ücretsiz katmanın dakikalık token sınırı aşıldı; retryAfter saniye sonra yeniden denenebilir. */
-class RateLimitError extends AiError {
+export class RateLimitError extends AiError {
   constructor(readonly retryAfter: number) {
     super('Ücretsiz kullanım sınırına ulaşıldı. Biraz sonra tekrar dene.');
   }
@@ -149,6 +152,41 @@ export async function transcribe(audio: Blob, language = 'en'): Promise<string> 
   form.append('temperature', '0');
   const data = (await post('/audio/transcriptions', form, false, 30_000)) as { text?: string };
   return (data.text ?? '').trim();
+}
+
+/** Groq'ta modelin kullanım şartları henüz kabul edilmemiş (console.groq.com'da bir kez onaylanır). */
+export class TermsError extends AiError {}
+
+export const TTS_TERMS_URL = 'https://console.groq.com/playground?model=canopylabs%2Forpheus-v1-english';
+
+/** Metni Orpheus ile seslendirir (en fazla 200 karakter); WAV döner. */
+export async function synthesizeSpeech(text: string): Promise<Blob> {
+  const key = apiKey();
+  if (!key) throw new AiError('Yapay zekâ anahtarı tanımlı değil.');
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 20_000);
+  try {
+    const res = await fetch(`${API}/audio/speech`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: TTS_MODEL, voice: TTS_VOICE, input: text, response_format: 'wav' }),
+      signal: ctrl.signal,
+    });
+    if (res.status === 429) throw new RateLimitError(Number(res.headers.get('retry-after')) || 60);
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      if (body.includes('model_terms_required')) throw new TermsError('Groq Orpheus şartları kabul edilmemiş.');
+      throw new AiError(`Ses servisi yanıt vermedi (HTTP ${res.status}).`);
+    }
+    const blob = await res.blob();
+    if (!blob.size) throw new AiError('Ses servisi boş yanıt verdi.');
+    return blob.type.startsWith('audio/') ? blob : new Blob([blob], { type: 'audio/wav' });
+  } catch (e) {
+    if (e instanceof AiError) throw e;
+    throw new AiError(navigator.onLine ? 'Ses servisine bağlanılamadı.' : 'İnternet bağlantısı yok.');
+  } finally {
+    clearTimeout(t);
+  }
 }
 
 /** Anahtarın çalıştığını hızlıca doğrular. */
