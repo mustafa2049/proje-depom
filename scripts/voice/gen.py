@@ -21,8 +21,9 @@ SR = 24000
 POS_KEYS = {'noun': 'NOUN', 'verb': 'VERB', 'adjective': 'ADJ', 'adverb': 'ADV'}
 # Kokoro çok kısa girdilerde bazen kelimenin önüne kısa bir "ı/a" sesi ekliyor ("seed" → "a seed",
 # "set up" → "is that up"). Kelime ve kalıplar bu yüzden bir taşıyıcı cümlenin ardından üretilip
-# aradaki sessizlikten kesilir.
-CARRIER = 'Okay.'
+# aradaki sessizlikten kesilir. "Okay." uygun değil: spaCy "Okay." ifadesini bazen tek parça sayıyor,
+# nokta düşüyor ve duraklama oluşmuyor; "Listen." her denemede 120–210 ms'lik bir duraklama üretti.
+CARRIER = 'Listen.'
 
 
 def unique_tasks(items, skip_dir, kind=None):
@@ -64,17 +65,27 @@ def spoken_input(x, lexicon):
 
 
 def cut_after_carrier(a, toks):
-    """Taşıyıcının noktasıyla hedefin ilk sözcüğü arasındaki en sessiz 10 ms'yi döner; bulunamazsa None."""
+    """Taşıyıcı ile hedef arasındaki en uzun sessizliğin (≥50 ms) son kısmından keser; yoksa None."""
     import numpy as np
 
-    stop = next((i for i, t in enumerate(toks) if t[0].strip() == '.'), None)
+    stop = next((i for i, t in enumerate(toks) if t[0].strip().endswith('.')), None)
     if stop is None or stop + 1 >= len(toks):
         return None
-    lo, hi = int(toks[stop][2] * SR), int(toks[stop + 1][1] * SR)
-    if hi - lo < 480:
-        lo = max(0, hi - int(0.1 * SR))
-    frames = [(float(np.sqrt(np.mean(a[i:i + 240] ** 2))), i) for i in range(lo, max(lo + 1, hi - 240), 240)]
-    return min(frames)[1] if frames else hi
+    lo = max(0, int((toks[stop][1] - 0.05) * SR))
+    hi = min(len(a), int((toks[stop + 1][1] + 0.08) * SR))
+    rms = [float(np.sqrt(np.mean(a[i:i + 240] ** 2))) for i in range(lo, hi - 240, 240)]
+    best, start = None, None
+    for j, v in enumerate(rms + [1.0]):
+        if v < 0.004 and start is None:
+            start = j
+        elif v >= 0.004 and start is not None:
+            if best is None or j - start > best[1] - best[0]:
+                best = (start, j)
+            start = None
+    if best is None or best[1] - best[0] < 5:
+        return None
+    # Sessizliğin sonundan 60 ms önce kes: yumuşak başlangıçlar (h, f, θ) eşiğin altında başlayabilir.
+    return lo + max(best[0], best[1] - 6) * 240
 
 
 def char_offsets(original, tokens):
