@@ -1,6 +1,6 @@
 import { slugify } from '../lib/slug';
 import type { Cefr, Example, PartOfSpeech, Word } from '../lib/types';
-import { EXTRA_WORDS } from './vocab';
+import { EXTRA_WORDS, LEVEL_WORDS } from './vocab';
 
 type Extra = Partial<Omit<Word, 'id' | 'word' | 'ipa' | 'pos' | 'cefr' | 'meaning' | 'examples' | 'deckId'>>;
 
@@ -487,7 +487,8 @@ export const SEED_WORDS: Word[] = [
   ]),
 ];
 
-/** Elle yazılmış ayrıntılı kelimeler + satır formatındaki genişletilmiş sözlük. */
+/** Seviye kelimeleri + elle yazılmış ayrıntılı kelimeler + satır formatındaki genişletilmiş sözlük. */
+SEED_WORDS.unshift(...LEVEL_WORDS);
 SEED_WORDS.push(...EXTRA_WORDS);
 
 export const SEED_WORD_MAP: Record<string, Word> = Object.fromEntries(SEED_WORDS.map((x) => [x.id, x]));

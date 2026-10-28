@@ -58,6 +58,11 @@ Yönlendirme `#/` tabanlı olduğu için ek sunucu ayarı gerekmez.
 - **Biliyorum** → bir üst kutu, **Çok Kolay** → Kutu 5, **Unuttum** → Kutu 1.
 - Arka arkaya 4 kez unutulan kelimeler **İnatçı Kelimeler Kliniği**ne düşer.
 - Günlük plan: önce vadesi gelen tekrarlar, sonra günlük kota kadar yeni kelime (Profil → Ayarlar).
+- **Seviye yolu** (varsayılan): yeni kelimeler A1 → A2 → B1 → B2 → C1 → C2 sırasıyla gelir; bir seviyenin
+  yeni kelimeleri bitmeden sonrakine geçilmez. Seviye içinde konular dönüşümlü sıralanır (günlük konuşma,
+  çekirdek, yemek, ev, seyahat…), böylece aynı gün tek bir konuya takılınmaz. Başlangıç seviyesi
+  Profil → Ayarlar → Kart Çalışma'dan seçilir (ör. B1 seçilirse A1–A2'nin yeni kelimeleri atlanır);
+  "Seçtiğim destelerden" seçeneği eski deste bazlı davranışa döner.
 - **Akıllı tekrar aralıkları** (varsayılan açık): her kartın 0.7–1.5 arası bir kolaylık çarpanı vardır.
   Çok Kolay +0.15, Biliyorum +0.05, Unuttum −0.2; Kutu 2–5 aralığı bu çarpanla ölçeklenir (Kutu 1 hep 1 gün).
   Kapatılırsa klasik Leitner aralıkları kullanılır.
@@ -78,10 +83,11 @@ kotadan bağımsız ek tur başlatılabilir.
 
 | Bölüm | İçerik |
 | --- | --- |
-| Ana Sayfa | Günlük plan, Leitner dağılımı, hızlı modüller, inatçı kelime uyarısı |
-| Öğren | Kart oturumu (dokun-çevir, kaydır, klavye: Boşluk / ← / ↑ / →), oturum özeti, aktif desteler |
+| Ana Sayfa | Günlük plan, seviye yolu kartı (şu anki seviye ve ilerleme), Leitner dağılımı, hızlı modüller, inatçı kelime uyarısı |
+| Öğren | Kart oturumu (dokun-çevir, kaydır, klavye: Boşluk / ← / ↑ / →), oturum özeti, seviye listesi ve seviyeye özel çalışma, aktif desteler |
 | Pratik | 12 modül + 2 yapay zekâ modülü (aşağıda) |
-| Kütüphane | 14 deste, 1000+ kelime, Türkçe karakter duyarsız arama ("kacinilmaz" → kaçınılmaz), CEFR filtresi, hızlı kelime ekleme |
+| Kütüphane | Seviyeler (A1–C2), 14 deste, 2400+ kelime, Türkçe karakter duyarsız arama ("kacinilmaz" → kaçınılmaz), CEFR filtresi, hızlı kelime ekleme |
+| Seviye sayfası | Seviyedeki tüm kelimeler (yeni kelimeler tanıtılacakları sırayla), ilerleme, o seviyeden çalışma, "seviye yolumu buradan başlat" |
 | Deste sayfası | Destedeki tüm kelimeler; Yeni / Öğreniliyor / Kalıcı filtresi, deste içi arama, günlük plana ekleme |
 | Kendi Kelimeni Ekle | Otomatik doldurma, kamera ile metin tarama (OCR), altyazı (.srt/.vtt) analizi |
 | Profil | İstatistikler, haftalık harita, önümüzdeki 7 günün tekrar tahmini, son 12 haftanın çalışma takvimi, yapay zekâ koçu, başarımlar, ayarlar, yedekleme / Anki dışa aktarma |
@@ -135,9 +141,21 @@ Gömülü anahtar APK'dan okunabilir; bu yüzden APK yalnızca kişisel kullanı
 
 ## Sözlük
 
-1000'den fazla kelime, 14 deste: Çekirdek (A1–B1), Akademik, İş İngilizcesi, Günlük Konuşma & Deyimler,
-Sitcom, Seyahat, Yemek, Sağlık, Teknoloji, Duygular & Kişilik, Ev & Günlük Yaşam, Doğa & Çevre, Phrasal Verbs.
-Her kelimede IPA okunuşu, Türkçe anlam, CEFR seviyesi ve çevirili örnek cümle bulunur.
+2442 kelime, 14 deste: Çekirdek (A1–B2), Akademik, İş İngilizcesi, Günlük Konuşma & Deyimler,
+Sitcom, Seyahat, Yemek, Sağlık, Teknoloji, Duygular & Kişilik, Ev & Günlük Yaşam, Doğa & Çevre, Phrasal Verbs,
+İleri Seviye Kelimeler (C1–C2). Her kelimede IPA okunuşu, Türkçe anlam, CEFR seviyesi ve çevirili örnek cümle bulunur.
+
+| Seviye | Kelime |
+| --- | --- |
+| A1 Başlangıç | 440 |
+| A2 Temel | 506 |
+| B1 Orta | 560 |
+| B2 Orta Üstü | 464 |
+| C1 İleri | 270 |
+| C2 Ustalık | 202 |
+
+Seviye yolu için eklenen kelimeler `src/data/vocab/a1.ts` … `c2.ts` dosyalarındadır (her dosyada kelimeler
+konu destelerine göre gruplanır); konu dosyaları (`core.ts`, `travel.ts`…) eski sözlüğü taşır.
 
 Yeni kelime eklemek için `src/data/vocab/` altındaki dosyalara satır başına bir kelime yazılır:
 
@@ -146,8 +164,9 @@ kelime | /ipa/ | tür | CEFR | Türkçe anlam | Örnek cümle | Örnek çevirisi
 ```
 
 Tür kodları: `n` isim, `v` fiil, `adj` sıfat, `adv` zarf, `pv` phrasal verb, `idm` deyim, `phr` kalıp,
-`conj` bağlaç, `prep` edat. `npm test` yinelenen kelimeleri, eksik çevirileri ve örnek cümlenin kelimeyi
-içerip içermediğini otomatik denetler.
+`conj` bağlaç, `prep` edat. `npm test` yinelenen kelimeleri, eksik çevirileri, örnek cümlenin kelimeyi
+içerip içermediğini, her seviyede en az 150 kelime olduğunu ve modüllerde (hikâye, sahne, eşdizim,
+karıştırılan kelimeler) geçen kelimelerin sözlükte bulunduğunu otomatik denetler.
 
 ## Klasör yapısı
 

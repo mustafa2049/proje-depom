@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { SEED_WORDS } from '../data/words';
+import { SEED_WORDS, SEED_WORD_MAP } from '../data/words';
 import { DECKS } from '../data/decks';
+import { CONFUSABLES } from '../data/confusables';
+import { COLLOCATIONS, FAMILIES, SCENES, STORIES } from '../data/modules';
 import { splitByTerm } from '../lib/text';
 import { dayIndex, dayKey } from '../lib/leitner';
 import { activityCalendar, activityLevel, allWords, boxCounts, CEFR_LEVELS, coachStats, currentLevel, dailyPlan, leeches, levelPathWords, reviewForecast, unseenWords, wordMap } from '../store/selectors';
@@ -25,6 +27,22 @@ describe('tohum sözlük', () => {
   });
   it('her örnek cümlenin Türkçe çevirisi var', () => {
     expect(SEED_WORDS.filter((w) => !w.examples[0].tr).map((w) => w.id)).toEqual([]);
+  });
+  it('seviye yolunun her basamağında yeterince kelime var', () => {
+    for (const level of CEFR_LEVELS) {
+      expect(SEED_WORDS.filter((w) => w.cefr === level).length, level).toBeGreaterThanOrEqual(150);
+    }
+  });
+  it('modüllerde geçen kelimeler sözlükte var', () => {
+    const missing: string[] = [];
+    for (const s of STORIES) for (const p of s.paragraphs) for (const m of p.en.matchAll(/\[\[([^\]|]+)/g)) if (!SEED_WORD_MAP[m[1]]) missing.push(`hikâye ${s.id}: ${m[1]}`);
+    for (const sc of SCENES) {
+      for (const id of [sc.target, ...Object.values(sc.links ?? {})]) if (!SEED_WORD_MAP[id] && !sc.glossary?.[id]) missing.push(`sahne ${sc.id}: ${id}`);
+    }
+    for (const f of FAMILIES) if (!SEED_WORD_MAP[f.center.id]) missing.push(`aile: ${f.center.id}`);
+    for (const c of COLLOCATIONS) if (!SEED_WORD_MAP[c.id]) missing.push(`eşdizim: ${c.id}`);
+    for (const c of CONFUSABLES) for (const side of c.sides) if (!SEED_WORD_MAP[side.word]) missing.push(`karışan ${c.id}: ${side.word}`);
+    expect(missing).toEqual([]);
   });
 });
 
