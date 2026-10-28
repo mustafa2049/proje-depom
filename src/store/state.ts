@@ -10,6 +10,7 @@ import {
 import type {
   AppState,
   BoxNumber,
+  CardState,
   CoachReport,
   DayStat,
   JournalEntry,
@@ -42,6 +43,8 @@ export function createInitialState(now = Date.now()): AppState {
       typeAnswer: false,
       smartIntervals: true,
       reminder: { enabled: false, hour: 20, minute: 0 },
+      autoSpeak: false,
+      autoBackup: true,
     },
     cards: {},
     customWords: [],
@@ -59,6 +62,8 @@ export function createInitialState(now = Date.now()): AppState {
 
 export type Action =
   | { type: 'review'; wordId: string; outcome: ReviewOutcome; now?: number }
+  /** Son değerlendirmeyi geri alır: kartı önceki haline, günlük sayaçları ve XP'yi eski değerine döndürür */
+  | { type: 'undoReview'; wordId: string; prev: CardState | undefined; outcome: ReviewOutcome; at: number }
   | { type: 'addXp'; amount: number; now?: number }
   | { type: 'addWord'; word: Word; box?: BoxNumber; now?: number }
   | { type: 'updateWord'; word: Word }
@@ -78,6 +83,7 @@ export type Action =
   | { type: 'deleteAiStory'; id: string }
   | { type: 'setCoachReport'; report: CoachReport }
   | { type: 'import'; state: AppState }
+  | { type: 'refresh' }
   | { type: 'reset' };
 
 function emptyDay(): DayStat {
@@ -119,6 +125,27 @@ export function reducer(state: AppState, action: Action): AppState {
         })),
       };
       return addXp(next, XP[action.outcome], now);
+    }
+    case 'undoReview': {
+      const cards = { ...state.cards };
+      if (action.prev) cards[action.wordId] = action.prev;
+      else delete cards[action.wordId];
+      const xp = XP[action.outcome];
+      const key = dayKey(action.at);
+      const day = state.history[key];
+      const history = day
+        ? {
+            ...state.history,
+            [key]: {
+              ...day,
+              reviews: Math.max(0, day.reviews - 1),
+              correct: Math.max(0, day.correct - (action.outcome === 'forgot' ? 0 : 1)),
+              newWords: Math.max(0, day.newWords - (action.prev ? 0 : 1)),
+              xp: Math.max(0, day.xp - xp),
+            },
+          }
+        : state.history;
+      return { ...state, cards, history, profile: { ...state.profile, xp: Math.max(0, state.profile.xp - xp) } };
     }
     case 'addXp':
       return addXp(state, action.amount, action.now ?? Date.now());
@@ -221,6 +248,9 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, coachReport: action.report };
     case 'import':
       return migrate(action.state);
+    case 'refresh':
+      // Uygulama ertesi gün öne getirildiğinde "bugün"e bağlı ekranlar yeniden hesaplansın
+      return { ...state };
     case 'reset':
       return createInitialState();
     default:

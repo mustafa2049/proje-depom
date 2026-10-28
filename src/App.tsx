@@ -1,9 +1,13 @@
-import { lazy, Suspense, useEffect } from 'react';
-import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { App as NativeApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
+import { lazy, Suspense, useEffect, useRef } from 'react';
+import { HashRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ToastProvider } from './components/Toast';
 import { Icon } from './components/ui';
 import Dashboard from './pages/Dashboard';
 import Learn from './pages/Learn';
+import { runBackHandlers } from './lib/backButton';
+import { autoBackup } from './lib/backup';
 import { dayKey } from './lib/leitner';
 import { cancelReminders, remindersSupported, scheduleReminders } from './lib/reminders';
 import { AppStoreProvider, useStore } from './store/AppStore';
@@ -16,6 +20,7 @@ const AiCloze = lazy(() => import('./pages/practice/AiCloze'));
 const Practice = lazy(() => import('./pages/Practice'));
 const Library = lazy(() => import('./pages/Library'));
 const AddWord = lazy(() => import('./pages/AddWord'));
+const DeckDetail = lazy(() => import('./pages/DeckDetail'));
 const WordDetail = lazy(() => import('./pages/WordDetail'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Quiz = lazy(() => import('./pages/practice/Quiz'));
@@ -56,6 +61,48 @@ function ReminderSync() {
   return null;
 }
 
+/**
+ * Android'e özgü davranışlar: geri tuşu (önce açık pencere, sonra ekranın kendi işleyicisi, sonra geri
+ * gezinme; ana sayfada uygulamayı arka plana alır), arka plana geçerken otomatik yedek ve öne gelince
+ * "bugün"e bağlı ekranların yenilenmesi.
+ */
+function NativeBridge() {
+  const { state, dispatch } = useStore();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const latest = useRef({ state, navigate, pathname });
+  useEffect(() => {
+    latest.current = { state, navigate, pathname };
+  });
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) {
+      const onVisible = () => document.visibilityState === 'visible' && dispatch({ type: 'refresh' });
+      document.addEventListener('visibilitychange', onVisible);
+      return () => document.removeEventListener('visibilitychange', onVisible);
+    }
+    const handles = [
+      NativeApp.addListener('backButton', ({ canGoBack }) => {
+        if (runBackHandlers()) return;
+        const { pathname: path, navigate: go } = latest.current;
+        if (path === '/') void NativeApp.minimizeApp();
+        else if (canGoBack) go(-1);
+        else go('/', { replace: true });
+      }),
+      NativeApp.addListener('pause', () => void autoBackup(latest.current.state)),
+      NativeApp.addListener('resume', () => dispatch({ type: 'refresh' })),
+    ];
+    return () => handles.forEach((h) => void h.then((l) => l.remove()));
+  }, [dispatch]);
+  return null;
+}
+
+/** Aynı adreste farklı parametreyle (ör. ek tur) yeni oturum başlasın diye her gezinmede yeniden kurulur. */
+function StudySessionRoute() {
+  const { key } = useLocation();
+  return <StudySession key={key} />;
+}
+
 function Loading() {
   return (
     <div className="min-h-screen flex items-center justify-center text-primary">
@@ -71,11 +118,12 @@ export default function App() {
         <ReminderSync />
         <HashRouter>
           <ScrollToTop />
+          <NativeBridge />
           <Suspense fallback={<Loading />}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/ogren" element={<Learn />} />
-              <Route path="/ogren/oturum" element={<StudySession />} />
+              <Route path="/ogren/oturum" element={<StudySessionRoute />} />
               <Route path="/ogren/ozet" element={<SessionSummary />} />
               <Route path="/pratik" element={<Practice />} />
               <Route path="/pratik/quiz" element={<Quiz />} />
@@ -94,6 +142,7 @@ export default function App() {
               <Route path="/pratik/klinik" element={<LeechClinic />} />
               <Route path="/kutuphane" element={<Library />} />
               <Route path="/kutuphane/ekle" element={<AddWord />} />
+              <Route path="/kutuphane/deste/:id" element={<DeckDetail />} />
               <Route path="/kelime/:id" element={<WordDetail />} />
               <Route path="/profil" element={<Profile />} />
               <Route path="*" element={<Navigate to="/" replace />} />

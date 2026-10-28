@@ -1,17 +1,36 @@
 import { DECKS } from '../data/decks';
-import { SEED_WORDS } from '../data/words';
+import { SEED_WORD_MAP, SEED_WORDS } from '../data/words';
 import { computeStreak, dayIndex, dayKey, dayKeyFromIndex, isDue, isLeech, longestStreak } from '../lib/leitner';
 import type { AppState, BoxNumber, CardState, Word } from '../lib/types';
 
-export function allWords(state: AppState): Word[] {
-  const custom = new Map(state.customWords.map((w) => [w.id, w]));
+/** Tohum sözlük + kullanıcının kelimeleri (aynı kimlikli kullanıcı kaydı tohumdakinin yerine geçer). */
+export function wordsFrom(customWords: Word[]): Word[] {
+  const custom = new Map(customWords.map((w) => [w.id, w]));
   const seed = SEED_WORDS.map((w) => custom.get(w.id) ?? w);
-  const extra = state.customWords.filter((w) => !SEED_WORDS.some((s) => s.id === w.id));
+  const extra = customWords.filter((w) => !SEED_WORD_MAP[w.id]);
   return [...seed, ...extra];
 }
 
+// Kelime listeleri yalnızca customWords dizisi değişince (değişmez güncellemeler: yeni dizi) yeniden kurulur.
+const listCache = new WeakMap<Word[], Word[]>();
+const mapCache = new WeakMap<Word[], Record<string, Word>>();
+
+export function allWords(state: AppState): Word[] {
+  let list = listCache.get(state.customWords);
+  if (!list) {
+    list = wordsFrom(state.customWords);
+    listCache.set(state.customWords, list);
+  }
+  return list;
+}
+
 export function wordMap(state: AppState): Record<string, Word> {
-  return Object.fromEntries(allWords(state).map((w) => [w.id, w]));
+  let map = mapCache.get(state.customWords);
+  if (!map) {
+    map = Object.fromEntries(allWords(state).map((w) => [w.id, w]));
+    mapCache.set(state.customWords, map);
+  }
+  return map;
 }
 
 export function boxCounts(state: AppState): Record<BoxNumber, number> {
@@ -219,4 +238,72 @@ export function coachStats(state: AppState, words: Record<string, Word>, posLabe
     `Türe göre doğruluk: ${posLine || 'yeterli veri yok'}.`,
     `Son 7 günde yazılan günlük sayısı: ${state.journal.filter((j) => j.createdAt >= now - 7 * 86_400_000).length}.`,
   ].join('\n');
+}
+
+export interface ForecastDay {
+  key: string;
+  label: string;
+  count: number;
+  isToday: boolean;
+}
+
+/** Önümüzdeki günlerde vadesi gelecek kart sayısı; gecikmiş kartlar bugüne sayılır. */
+export function reviewForecast(state: AppState, days = 7, now = Date.now()): ForecastDay[] {
+  const today = dayIndex(now);
+  const counts: number[] = Array(days).fill(0);
+  for (const c of Object.values(state.cards)) {
+    const offset = Math.max(0, c.dueDay - today);
+    if (offset < days) counts[offset]++;
+  }
+  return counts.map((count, i) => {
+    const date = new Date((today + i) * 86_400_000);
+    return {
+      key: dayKeyFromIndex(today + i),
+      label: i === 0 ? 'Bugün' : i === 1 ? 'Yarın' : `${DAY_NAMES[date.getUTCDay()]} ${date.getUTCDate()}`,
+      count,
+      isToday: i === 0,
+    };
+  });
+}
+
+export interface ActivityCell {
+  key: string;
+  reviews: number;
+  /** 0: çalışılmadı, 1: hedefin yarısından az, 2: hedefe yakın, 3: hedef tamam, 4: hedefin 2 katı */
+  level: 0 | 1 | 2 | 3 | 4;
+  future: boolean;
+}
+
+/** Günlük tekrar sayısını günlük hedefe göre 0-4 yoğunluk seviyesine çevirir. */
+export function activityLevel(reviews: number, goal: number): ActivityCell['level'] {
+  if (reviews <= 0) return 0;
+  const r = reviews / Math.max(1, goal);
+  return r < 0.5 ? 1 : r < 1 ? 2 : r < 2 ? 3 : 4;
+}
+
+/** Son `weeks` haftanın çalışma takvimi: her sütun Pazartesi–Pazar bir hafta. */
+export function activityCalendar(state: AppState, weeks = 12, now = Date.now()) {
+  const today = dayIndex(now);
+  const mondayOffset = (new Date(now).getDay() + 6) % 7;
+  const start = today - mondayOffset - (weeks - 1) * 7;
+  const columns: ActivityCell[][] = [];
+  let total = 0;
+  let activeDays = 0;
+  let best: { key: string; reviews: number } | null = null;
+  for (let w = 0; w < weeks; w++) {
+    const col: ActivityCell[] = [];
+    for (let d = 0; d < 7; d++) {
+      const idx = start + w * 7 + d;
+      const key = dayKeyFromIndex(idx);
+      const reviews = idx > today ? 0 : (state.history[key]?.reviews ?? 0);
+      if (reviews > 0) {
+        total += reviews;
+        activeDays++;
+        if (!best || reviews > best.reviews) best = { key, reviews };
+      }
+      col.push({ key, reviews, level: activityLevel(reviews, state.profile.dailyGoal), future: idx > today });
+    }
+    columns.push(col);
+  }
+  return { columns, total, activeDays, best };
 }

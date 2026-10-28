@@ -3,6 +3,7 @@ import { SubScreen } from '../../components/Layout';
 import { useToast } from '../../components/Toast';
 import { cx, EmptyState, Icon, PrimaryButton, shuffle, SpeakButton } from '../../components/ui';
 import { aiAvailable, transcribe } from '../../lib/ai';
+import { useBackHandler } from '../../lib/backButton';
 import { aiChatReview, aiChatTurn, type ChatMessage, type ChatReview } from '../../lib/aiTasks';
 import { speak, stopSpeaking, vibrate } from '../../lib/speech';
 import { splitByTerm } from '../../lib/text';
@@ -95,7 +96,23 @@ export default function Conversation() {
   const targetWords = useMemo(() => targets.map((w) => w.word), [targets]);
   const userCount = messages.filter((m) => m.role === 'user').length;
 
-  if (!aiAvailable()) {
+  const reset = () => {
+    stopSpeaking();
+    setScenario(null);
+    setMessages([]);
+    setReview(null);
+    setSuggestions([]);
+    setTargets(pickTargets(state, words));
+  };
+
+  // Android geri tuşu: sohbetten veya karneden senaryo seçimine döner
+  useBackHandler(() => {
+    reset();
+    return true;
+  }, scenario !== null);
+
+  // Sohbet sırasında bağlantı koparsa ekran kaybolmasın; gönderimler hata mesajı verir
+  if (!aiAvailable() && !scenario) {
     return (
       <SubScreen title="Sohbet Partneri">
         <EmptyState icon="cloud_off" title="Yapay zekâ gerekli" text="Sohbet partneri için internet bağlantısı ve Ayarlar’da tanımlı bir Groq anahtarı gerekiyor." />
@@ -206,15 +223,6 @@ export default function Conversation() {
     } finally {
       setReviewing(false);
     }
-  };
-
-  const reset = () => {
-    stopSpeaking();
-    setScenario(null);
-    setMessages([]);
-    setReview(null);
-    setSuggestions([]);
-    setTargets(pickTargets(state, words));
   };
 
   // ── Senaryo seçimi ──

@@ -31,6 +31,17 @@ APK depodaki sabit hata ayıklama anahtarıyla (`android/app/lexilearn-debug.key
 böylece yeni sürümler eskisinin üzerine, veriler silinmeden kurulabilir. Google Play'e yüklemek için
 ayrı bir yayın anahtarı oluşturulmalıdır.
 
+Android'e özgü davranışlar:
+
+- **Geri tuşu:** önce açık pencereyi kapatır, kart oturumunda oturumu kaydedip özete geçer, sohbet
+  partnerinde senaryo seçimine döner; diğer ekranlarda bir önceki ekrana gider, ana sayfada uygulamayı arka plana alır.
+- **Yedekleme:** WebView dosya indiremediği için yedek ve Anki dosyaları `Belgeler/LexiLearn` klasörüne yazılır ve
+  paylaşım menüsü açılır (Drive'a kaydet, WhatsApp vb.).
+- **Otomatik yedek** (varsayılan açık): uygulama arka plana alındığında günün yedeği
+  `Belgeler/LexiLearn/lexilearn-otomatik-YYYY-AA-GG.json` olarak yazılır; son 7 gün tutulur. Kart yoksa
+  (ör. veriler sıfırlandıysa) eski yedeklerin üzerine yazılmaz. Uygulama silinse de dosyalar kalır; Profil →
+  Yedekle & Dışa Aktar → Yedekten Geri Yükle ile seçilebilir.
+
 `dist/` klasörü herhangi bir statik sunucuya (GitHub Pages, Netlify, Vercel…) olduğu gibi yüklenebilir.
 Yönlendirme `#/` tabanlı olduğu için ek sunucu ayarı gerekmez.
 
@@ -56,7 +67,12 @@ Yönlendirme `#/` tabanlı olduğu için ek sunucu ayarı gerekmez.
 - **Kartın soru yüzü:** İng → Tür, Tür → İng (ters kart) veya Karışık.
 - **Yazarak cevapla:** Kart çevrilmeden önce cevap yazılır; büyük/küçük harf, noktalama, Türkçe karakter
   (ç→c, ı→i…) ve kelime uzunluğuna göre 1–2 harflik yazım hatası tolere edilir.
+- **Kelimeyi otomatik seslendir:** İngilizce kelime göründüğünde telaffuz kendiliğinden çalar (ters kartta cevap çevrilince).
 - **Günlük hatırlatma** (yalnızca Android): seçilen saatte bildirim; o gün çalışıldıysa bildirim gelmez.
+
+Kart oturumunda yanlış butona basıldıysa üstteki **geri al** (↶, klavyede Backspace) son cevabı kutusu, günlük
+sayaçları ve XP'siyle birlikte geri alır. Günün kartları bitince **"+5 yeni kelime daha öğren"** ile günlük
+kotadan bağımsız ek tur başlatılabilir.
 
 ## Ekranlar
 
@@ -65,9 +81,10 @@ Yönlendirme `#/` tabanlı olduğu için ek sunucu ayarı gerekmez.
 | Ana Sayfa | Günlük plan, Leitner dağılımı, hızlı modüller, inatçı kelime uyarısı |
 | Öğren | Kart oturumu (dokun-çevir, kaydır, klavye: Boşluk / ← / ↑ / →), oturum özeti, aktif desteler |
 | Pratik | 12 modül + 2 yapay zekâ modülü (aşağıda) |
-| Kütüphane | 14 deste, 1000+ kelime, arama, CEFR filtresi, hızlı kelime ekleme |
+| Kütüphane | 14 deste, 1000+ kelime, Türkçe karakter duyarsız arama ("kacinilmaz" → kaçınılmaz), CEFR filtresi, hızlı kelime ekleme |
+| Deste sayfası | Destedeki tüm kelimeler; Yeni / Öğreniliyor / Kalıcı filtresi, deste içi arama, günlük plana ekleme |
 | Kendi Kelimeni Ekle | Otomatik doldurma, kamera ile metin tarama (OCR), altyazı (.srt/.vtt) analizi |
-| Profil | İstatistikler, haftalık harita, başarımlar, ayarlar, JSON yedek / Anki dışa aktarma |
+| Profil | İstatistikler, haftalık harita, önümüzdeki 7 günün tekrar tahmini, son 12 haftanın çalışma takvimi, yapay zekâ koçu, başarımlar, ayarlar, yedekleme / Anki dışa aktarma |
 
 **Pratik modülleri:** Aktif Hatırlama Quiz · Karıştırılan Kelimeler · Kalıp & Kolokasyon · Dizi & Film Replikleri ·
 Mikro Hikaye Okuyucu · Görsel Sahne Sözlüğü · Resmiyet & Ton · 3 Cümlelik Mikro Yazma · Telaffuz Laboratuvarı ·

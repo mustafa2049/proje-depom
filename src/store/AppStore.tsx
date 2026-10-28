@@ -13,7 +13,8 @@ const StoreContext = createContext<Store | null>(null);
 
 export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, loadState);
-  const words = useMemo(() => wordMap(state), [state]);
+  // Sözlük haritası kendi kelimeler değişmedikçe aynı nesnedir (seçicilerde önbelleklenir)
+  const words = wordMap(state);
   const first = useRef(true);
 
   useEffect(() => {

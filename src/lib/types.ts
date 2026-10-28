@@ -108,6 +108,10 @@ export interface Profile {
   smartIntervals: boolean;
   /** Günlük hatırlatma bildirimi (yalnızca Android) */
   reminder: { enabled: boolean; hour: number; minute: number };
+  /** Kart gösterildiğinde İngilizce kelimeyi otomatik seslendir */
+  autoSpeak: boolean;
+  /** Belgeler/LexiLearn klasörüne günlük otomatik yedek (yalnızca Android) */
+  autoBackup: boolean;
 }
 
 export type CardDirection = 'en-tr' | 'tr-en' | 'mixed';

@@ -12,7 +12,7 @@ const DIRECTIONS: { id: CardDirection; label: string }[] = [
   { id: 'mixed', label: 'Karışık' },
 ];
 
-function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+export function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
     <button
       type="button"
@@ -83,6 +83,13 @@ export function StudySettings() {
           <p className="font-label-sm text-label-sm text-on-surface-variant font-normal">Kartı çevirmeden önce cevabını yaz, uygulama kontrol etsin.</p>
         </div>
         <Toggle label="Yazarak cevapla" checked={p.typeAnswer} onChange={(v) => dispatch({ type: 'setProfile', patch: { typeAnswer: v } })} />
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="font-label-lg text-label-lg text-on-surface">Kelimeyi otomatik seslendir</p>
+          <p className="font-label-sm text-label-sm text-on-surface-variant font-normal">İngilizce kelime göründüğünde telaffuzu kendiliğinden çalar.</p>
+        </div>
+        <Toggle label="Kelimeyi otomatik seslendir" checked={p.autoSpeak} onChange={(v) => dispatch({ type: 'setProfile', patch: { autoSpeak: v } })} />
       </div>
       <div className="flex items-center justify-between gap-3">
         <div>

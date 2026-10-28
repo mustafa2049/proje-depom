@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { TabScreen } from '../components/Layout';
+import { ExtraStudyButton } from '../components/ExtraStudy';
 import { cx, Icon, PrimaryButton, ProgressBar } from '../components/ui';
 import { DECKS } from '../data/decks';
 import { BOX_COLORS } from '../lib/leitner';
@@ -47,10 +48,19 @@ export default function Learn() {
             );
           })}
         </div>
-        <PrimaryButton disabled={!plan.total} onClick={() => navigate('/ogren/oturum')} className="relative z-10">
-          <Icon name="play_arrow" size={22} fill />
-          {plan.total ? `${plan.total} Kartı Çalış` : 'Bugünlük Kart Kalmadı'}
-        </PrimaryButton>
+        {plan.total ? (
+          <PrimaryButton onClick={() => navigate('/ogren/oturum')} className="relative z-10">
+            <Icon name="play_arrow" size={22} fill />
+            {plan.total} Kartı Çalış
+          </PrimaryButton>
+        ) : (
+          <div className="relative z-10 flex flex-col gap-2">
+            <p className="font-label-md text-label-md text-secondary text-center flex items-center justify-center gap-1.5">
+              <Icon name="task_alt" size={18} /> Bugünkü kartların bitti
+            </p>
+            <ExtraStudyButton />
+          </div>
+        )}
         {!plan.newIds.length && newQuotaLeft(state) === 0 && (
           <p className="font-label-sm text-label-sm text-on-surface-variant text-center relative z-10">
             Günlük yeni kelime kotan doldu ({state.profile.newPerDay}). Profil ayarlarından değiştirebilirsin.
@@ -109,17 +119,19 @@ export default function Learn() {
               >
                 <span className={cx('block w-5 h-5 rounded-full bg-on-secondary transition-transform', enrolled ? 'translate-x-5 bg-surface' : 'bg-outline')} />
               </button>
-              <div className="flex flex-col min-w-0 flex-1">
+              <Link to={`/kutuphane/deste/${d.id}`} className="flex flex-col min-w-0 flex-1 gap-1">
                 <span className="font-label-lg text-label-lg text-on-surface truncate">
                   {d.emoji} {d.title}
                 </span>
-                <div className="flex items-center gap-2">
-                  <ProgressBar value={p.percent} className="w-20" barClass="bg-secondary" />
-                  <span className="font-label-sm text-label-sm text-on-surface-variant">
-                    {p.started}/{p.total} başladı • %{p.percent}
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-14 shrink-0">
+                    <ProgressBar value={p.percent} barClass="bg-secondary" />
+                  </div>
+                  <span className="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap truncate">
+                    {p.started}/{p.total} • %{p.percent}
                   </span>
                 </div>
-              </div>
+              </Link>
               <button
                 type="button"
                 onClick={() => navigate(`/ogren/oturum?deste=${d.id}`)}

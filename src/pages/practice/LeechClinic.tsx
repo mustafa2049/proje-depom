@@ -313,9 +313,9 @@ export default function LeechClinic() {
               autoComplete="off"
               spellCheck={false}
               placeholder="Kelimeyi bakmadan yaz…"
-              className={cx('flex-1 h-12 px-4 rounded-lg bg-surface-container text-on-surface font-headline-sm text-headline-sm outline-none focus:ring-1', shake ? 'ring-1 ring-error' : 'focus:ring-secondary')}
+              className={cx('flex-1 min-w-0 h-12 px-4 rounded-lg bg-surface-container text-on-surface font-headline-sm text-headline-sm outline-none focus:ring-1', shake ? 'ring-1 ring-error' : 'focus:ring-secondary')}
             />
-            <button type="button" onClick={checkTyped} className="h-12 px-4 rounded-lg bg-secondary-container text-on-secondary-container font-label-lg text-label-lg">
+            <button type="button" onClick={checkTyped} className="h-12 px-4 shrink-0 rounded-lg bg-secondary-container text-on-secondary-container font-label-lg text-label-lg">
               Doğrula
             </button>
           </div>

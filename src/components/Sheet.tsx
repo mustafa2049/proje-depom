@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
+import { useBackHandler } from '../lib/backButton';
 import { Icon } from './ui';
 
 /** Mobilde alttan açılan, geniş ekranda ortalanan modal. */
@@ -25,6 +26,12 @@ export function Sheet({
       window.removeEventListener('keydown', onKey);
     };
   }, [open, onClose]);
+
+  // Android geri tuşu önce açık sayfayı kapatır
+  useBackHandler(() => {
+    onClose();
+    return true;
+  }, open);
 
   if (!open) return null;
   return (

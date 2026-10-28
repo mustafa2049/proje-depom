@@ -44,7 +44,7 @@ export function Flashcard({
             : 'none';
 
   return (
-    <div className="relative w-full my-2">
+    <div className="relative w-full my-2 flex-1 flex flex-col">
       <div className="absolute inset-x-3 -bottom-2 h-12 bg-surface-container-highest/60 rounded-xl -z-10 translate-y-1" />
       <div className="absolute inset-x-6 -bottom-4 h-12 bg-surface-container-low/40 rounded-xl -z-20 translate-y-2" />
       <div
@@ -73,7 +73,7 @@ export function Flashcard({
         }}
         style={{ transform: exitStyle, opacity: exiting ? 0 : 1 }}
         className={cx(
-          'relative w-full min-h-[380px] rounded-xl bg-surface-container p-space-md flex flex-col justify-between cursor-pointer shadow-xl overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-primary',
+          'relative w-full flex-1 min-h-[360px] rounded-xl bg-surface-container p-space-md flex flex-col justify-between cursor-pointer shadow-xl overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-primary',
           dx === 0 && 'transition-all duration-300',
           dx > 40 && 'ring-2 ring-secondary/40',
           dx < -40 && 'ring-2 ring-error/40',

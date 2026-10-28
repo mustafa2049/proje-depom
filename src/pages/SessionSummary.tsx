@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom';
+import { ExtraStudyButton } from '../components/ExtraStudy';
 import { SubScreen } from '../components/Layout';
 import { EmptyState, Icon, PrimaryButton, SpeakButton, cx } from '../components/ui';
 import { BOX_INTERVALS, dayIndex, dayKey } from '../lib/leitner';
 import type { BoxNumber, SessionMove } from '../lib/types';
 import { useStore } from '../store/AppStore';
-import { streak } from '../store/selectors';
+import { dailyPlan, streak } from '../store/selectors';
 
 interface Group {
   key: string;
@@ -33,6 +34,7 @@ export default function SessionSummary() {
   const s = streak(state);
   const today = state.history[dayKey()];
   const goalReached = (today?.reviews ?? 0) >= state.profile.dailyGoal;
+  const plan = dailyPlan(state);
 
   if (!session || !session.moves.length) {
     return (
@@ -227,6 +229,14 @@ export default function SessionSummary() {
       )}
 
       <div className="pt-space-xs space-y-space-sm">
+        {plan.total > 0 ? (
+          <PrimaryButton onClick={() => navigate('/ogren/oturum', { replace: true })}>
+            <Icon name="play_arrow" size={20} fill />
+            <span>Kalan {plan.total} Kartı Çalış</span>
+          </PrimaryButton>
+        ) : (
+          <ExtraStudyButton replace />
+        )}
         <PrimaryButton onClick={() => navigate('/')}>
           <span>Ana Sayfaya Dön</span>
           <Icon name="home" size={20} />

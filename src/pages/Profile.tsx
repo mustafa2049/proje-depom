@@ -3,9 +3,11 @@ import { SubScreen } from '../components/Layout';
 import { AiCoach } from '../components/AiCoach';
 import { AiSettings } from '../components/AiSettings';
 import { Sheet } from '../components/Sheet';
-import { StudySettings } from '../components/StudySettings';
+import { ActivityCalendar, ReviewForecast } from '../components/StatsCharts';
+import { StudySettings, Toggle } from '../components/StudySettings';
 import { useToast } from '../components/Toast';
 import { cx, Icon } from '../components/ui';
+import { lastAutoBackup, nativeFiles } from '../lib/backup';
 import { exportAnki, exportBackup } from '../lib/exporters';
 import { BOX_COLORS, BOX_DESCRIPTIONS, BOX_INTERVALS, dayIndex } from '../lib/leitner';
 import { speak } from '../lib/speech';
@@ -41,6 +43,7 @@ export default function Profile() {
   const [exportOpen, setExportOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
+  const lastAuto = exportOpen ? lastAutoBackup() : null;
 
   const counts = boxCounts(state);
   const total = Object.keys(state.cards).length;
@@ -216,58 +219,9 @@ export default function Profile() {
         </div>
       </section>
 
-      <section className="bg-surface-container rounded-xl p-space-lg shadow-md flex flex-col gap-space-md">
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="font-headline-sm text-headline-sm text-on-surface">Hafıza Tutma Eğrisi</h2>
-            <span className="px-2 py-0.5 rounded-full bg-primary-container/20 text-primary font-label-sm text-label-sm">Ebbinghaus + SRS</span>
-          </div>
-          <p className="font-body-sm text-body-sm text-on-surface-variant">SRS müdahalesi ile unutmanın engellenmesi (temsili)</p>
-        </div>
-        <div className="bg-surface-container-low rounded-xl p-4 flex flex-col gap-3">
-          <div className="w-full h-44 relative">
-            <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 320 150" role="img" aria-label="Unutma eğrisi ve SRS tekrar eğrisi karşılaştırması">
-              <defs>
-                <linearGradient id="srsGlow" x1="0%" x2="0%" y1="0%" y2="100%">
-                  <stop offset="0%" stopColor="#4edea3" stopOpacity="0.35" />
-                  <stop offset="100%" stopColor="#4edea3" stopOpacity="0" />
-                </linearGradient>
-                <linearGradient id="decayGlow" x1="0%" x2="0%" y1="0%" y2="100%">
-                  <stop offset="0%" stopColor="#908fa0" stopOpacity="0.15" />
-                  <stop offset="100%" stopColor="#908fa0" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              {[20, 65, 110].map((y) => (
-                <line key={y} stroke="#464554" strokeDasharray="3 3" strokeOpacity="0.3" strokeWidth="1" x1="20" x2="310" y1={y} y2={y} />
-              ))}
-              <path d="M 25 25 Q 60 115 150 128 T 305 135 L 305 140 L 25 140 Z" fill="url(#decayGlow)" />
-              <path d="M 25 25 Q 60 115 150 128 T 305 135" fill="none" stroke="#908fa0" strokeDasharray="4 3" strokeOpacity="0.6" strokeWidth="2" />
-              <path d="M 25 25 Q 50 65 70 70 L 70 26 Q 105 55 135 62 L 135 25 Q 190 48 230 52 L 230 25 Q 275 35 305 38 L 305 140 L 25 140 Z" fill="url(#srsGlow)" />
-              <path d="M 25 25 Q 50 65 70 70 L 70 26 Q 105 55 135 62 L 135 25 Q 190 48 230 52 L 230 25 Q 275 35 305 38" fill="none" stroke="#4edea3" strokeLinecap="round" strokeWidth="2.5" />
-              {[70, 135, 230].map((x) => (
-                <circle key={x} className="animate-pulse" cx={x} cy={x === 70 ? 26 : 25} fill="#4edea3" r="3.5" />
-              ))}
-              <circle cx="305" cy="38" fill="#c0c1ff" r="4" />
-            </svg>
-            <div className="absolute right-1 top-2 bg-surface-container-highest px-2 py-1 rounded shadow-md text-right">
-              <span className="font-label-sm text-label-sm text-secondary font-bold">{acc ? `%${acc} Doğru` : 'Veri bekleniyor'}</span>
-            </div>
-          </div>
-          <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-secondary" />
-              <span className="font-label-sm text-label-sm text-on-surface">LexiLearn SRS Eğrisi</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-0.5 bg-outline" />
-              <span className="font-label-sm text-label-sm text-on-surface-variant">Geleneksel Unutma</span>
-            </div>
-          </div>
-          <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
-            Akıllı tekrarlar sayesinde kelimeler unutulma eşiğine gelmeden tam vaktinde zihne kazınır. Etiket, son 30 gündeki gerçek doğru cevap oranındır.
-          </p>
-        </div>
-      </section>
+      <ReviewForecast />
+
+      <ActivityCalendar />
 
       <section className="bg-surface-container rounded-xl p-space-lg shadow-md flex flex-col gap-space-md">
         <div className="flex items-center justify-between">
@@ -315,8 +269,8 @@ export default function Profile() {
             <Icon name="download_for_offline" size={22} />
           </div>
           <div className="flex flex-col">
-            <span className="font-label-lg text-label-lg text-on-surface">Öğrenme Verini Dışa Aktar</span>
-            <span className="font-label-sm text-label-sm text-on-surface-variant">JSON yedek veya Anki (.txt) formatında</span>
+            <span className="font-label-lg text-label-lg text-on-surface">Yedekle & Dışa Aktar</span>
+            <span className="font-label-sm text-label-sm text-on-surface-variant">JSON yedek, geri yükleme veya Anki (.txt)</span>
           </div>
         </div>
         <button
@@ -329,15 +283,25 @@ export default function Profile() {
         </button>
       </section>
 
-      <Sheet open={exportOpen} onClose={() => setExportOpen(false)} title="Dışa / İçe Aktar" icon="file_download">
-        <button type="button" onClick={() => { exportBackup(state); toast('Yedek indirildi'); }} className="w-full p-3 rounded-xl bg-surface-container flex items-center gap-3 text-left hover:bg-surface-container-highest">
+      <Sheet open={exportOpen} onClose={() => setExportOpen(false)} title="Yedekle & Dışa Aktar" icon="file_download">
+        <button
+          type="button"
+          onClick={() => void exportBackup(state).then((where) => toast('Yedek hazır', { description: where, icon: 'task_alt' }), () => toast('Yedek kaydedilemedi', { tone: 'error' }))}
+          className="w-full p-3 rounded-xl bg-surface-container flex items-center gap-3 text-left hover:bg-surface-container-highest"
+        >
           <Icon name="data_object" size={24} className="text-primary" />
           <div>
             <p className="font-label-lg text-label-lg text-on-surface">Tam Yedek (.json)</p>
-            <p className="font-label-sm text-label-sm text-on-surface-variant font-normal">Tüm kutular, geçmiş ve kendi kelimelerin. Başka cihaza taşımak için.</p>
+            <p className="font-label-sm text-label-sm text-on-surface-variant font-normal">
+              Tüm kutular, geçmiş ve kendi kelimelerin. {nativeFiles ? 'Belgeler/LexiLearn’e kaydedilir, Drive’a da gönderebilirsin.' : 'Başka cihaza taşımak için.'}
+            </p>
           </div>
         </button>
-        <button type="button" onClick={() => { exportAnki(state, words); toast('Anki dosyası indirildi'); }} className="w-full p-3 rounded-xl bg-surface-container flex items-center gap-3 text-left hover:bg-surface-container-highest">
+        <button
+          type="button"
+          onClick={() => void exportAnki(state, words).then((where) => toast('Anki dosyası hazır', { description: where, icon: 'task_alt' }), () => toast('Dosya kaydedilemedi', { tone: 'error' }))}
+          className="w-full p-3 rounded-xl bg-surface-container flex items-center gap-3 text-left hover:bg-surface-container-highest"
+        >
           <Icon name="style" size={24} className="text-secondary" />
           <div>
             <p className="font-label-lg text-label-lg text-on-surface">Anki Kartları (.txt)</p>
@@ -348,13 +312,29 @@ export default function Profile() {
           <Icon name="upload_file" size={24} className="text-tertiary" />
           <div>
             <p className="font-label-lg text-label-lg text-on-surface">Yedekten Geri Yükle</p>
-            <p className="font-label-sm text-label-sm text-on-surface-variant font-normal">Daha önce indirdiğin .json yedeğini yükler (mevcut verinin yerine geçer).</p>
+            <p className="font-label-sm text-label-sm text-on-surface-variant font-normal">
+              Bir .json yedeği seç (mevcut verinin yerine geçer).{nativeFiles && ' Otomatik yedekler Belgeler/LexiLearn klasöründedir.'}
+            </p>
           </div>
         </button>
+        {nativeFiles && (
+          <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-surface-container">
+            <div>
+              <p className="font-label-lg text-label-lg text-on-surface flex items-center gap-1.5">
+                <Icon name="cloud_sync" size={18} className="text-secondary" /> Otomatik yedek
+              </p>
+              <p className="font-label-sm text-label-sm text-on-surface-variant font-normal">
+                Uygulamadan çıkınca son 7 günün yedeği Belgeler/LexiLearn’de tutulur; uygulama silinse de kalır.
+                {lastAuto && ` Son yedek: ${new Date(lastAuto).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}.`}
+              </p>
+            </div>
+            <Toggle label="Otomatik yedek" checked={state.profile.autoBackup} onChange={(v) => dispatch({ type: 'setProfile', patch: { autoBackup: v } })} />
+          </div>
+        )}
         <input
           ref={importRef}
           type="file"
-          accept="application/json,.json"
+          accept="application/json,.json,text/plain,application/octet-stream"
           className="hidden"
           onChange={async (e) => {
             const f = e.target.files?.[0];
@@ -363,9 +343,11 @@ export default function Profile() {
             try {
               const parsed = JSON.parse(await f.text());
               if (parsed?.version !== 1) throw new Error('version');
-              if (!window.confirm('Mevcut ilerlemenin yerine yedekteki veriler yüklensin mi?')) return;
-              dispatch({ type: 'import', state: migrate(parsed) });
-              toast('Yedek geri yüklendi');
+              const restored = migrate(parsed);
+              const count = Object.keys(restored.cards).length;
+              if (!window.confirm(`Yedekte ${count} kart var. Mevcut ilerlemenin yerine yedekteki veriler yüklensin mi?`)) return;
+              dispatch({ type: 'import', state: restored });
+              toast('Yedek geri yüklendi', { description: `${count} kart ve geçmişin geri geldi.` });
               setExportOpen(false);
             } catch {
               toast('Geçersiz yedek dosyası', { tone: 'error' });

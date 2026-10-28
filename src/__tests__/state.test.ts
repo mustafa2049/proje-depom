@@ -3,7 +3,7 @@ import { SEED_WORDS } from '../data/words';
 import { DECKS } from '../data/decks';
 import { splitByTerm } from '../lib/text';
 import { dayIndex, dayKey } from '../lib/leitner';
-import { allWords, boxCounts, coachStats, dailyPlan, leeches, wordMap } from '../store/selectors';
+import { activityCalendar, activityLevel, allWords, boxCounts, coachStats, dailyPlan, leeches, reviewForecast, wordMap } from '../store/selectors';
 import { createInitialState, migrate, reducer } from '../store/state';
 
 const now = new Date(2026, 9, 27, 10, 0).getTime();
@@ -118,5 +118,63 @@ describe('yapay zekâ koçu', () => {
     const old = { ...createInitialState(now) } as Partial<ReturnType<typeof createInitialState>>;
     delete old.coachReport;
     expect(migrate(old).coachReport).toBeNull();
+  });
+});
+
+describe('geri alma', () => {
+  it('yeni kartın değerlendirmesini geri alınca kart ve günlük sayaçlar eski haline döner', () => {
+    const before = createInitialState(now);
+    const after = reducer(before, { type: 'review', wordId: 'inevitable', outcome: 'know', now });
+    expect(after.cards.inevitable).toBeDefined();
+    const undone = reducer(after, { type: 'undoReview', wordId: 'inevitable', prev: undefined, outcome: 'know', at: now });
+    expect(undone.cards.inevitable).toBeUndefined();
+    expect(undone.profile.xp).toBe(before.profile.xp);
+    const day = undone.history[dayKey(now)];
+    expect(day.reviews).toBe(0);
+    expect(day.correct).toBe(0);
+    expect(day.newWords).toBe(0);
+    expect(day.xp).toBe(0);
+  });
+  it('kutudaki kartı önceki kutusuna ve vadesine döndürür', () => {
+    let s = reducer(createInitialState(now), { type: 'review', wordId: 'thrive', outcome: 'know', now });
+    const prev = s.cards.thrive;
+    s = reducer(s, { type: 'review', wordId: 'thrive', outcome: 'forgot', now: now + 1000 });
+    expect(s.cards.thrive.box).toBe(1);
+    s = reducer(s, { type: 'undoReview', wordId: 'thrive', prev, outcome: 'forgot', at: now + 1000 });
+    expect(s.cards.thrive).toEqual(prev);
+    expect(s.history[dayKey(now)].reviews).toBe(1);
+  });
+});
+
+describe('istatistik takvimleri', () => {
+  it('7 günlük tahmin gecikmiş kartları bugüne sayar', () => {
+    const s = createInitialState(now);
+    const today = dayIndex(now);
+    s.cards = {
+      a: { ...s.cards.a, wordId: 'a', box: 1, dueDay: today - 3, lapses: 0, failStreak: 0, reviews: 1, correct: 1, lastReviewed: 0, addedAt: 0 },
+      b: { wordId: 'b', box: 2, dueDay: today, lapses: 0, failStreak: 0, reviews: 1, correct: 1, lastReviewed: 0, addedAt: 0 },
+      c: { wordId: 'c', box: 3, dueDay: today + 2, lapses: 0, failStreak: 0, reviews: 1, correct: 1, lastReviewed: 0, addedAt: 0 },
+      d: { wordId: 'd', box: 5, dueDay: today + 30, lapses: 0, failStreak: 0, reviews: 1, correct: 1, lastReviewed: 0, addedAt: 0 },
+    };
+    const f = reviewForecast(s, 7, now);
+    expect(f.map((d) => d.count)).toEqual([2, 0, 1, 0, 0, 0, 0]);
+    expect(f[0].label).toBe('Bugün');
+    expect(f[1].label).toBe('Yarın');
+  });
+  it('takvim seviyeleri günlük hedefe göre hesaplanır, gelecek günler boş kalır', () => {
+    expect([0, 5, 12, 20, 39, 40].map((n) => activityLevel(n, 20))).toEqual([0, 1, 2, 3, 3, 4]);
+    const s = createInitialState(now);
+    s.history[dayKey(now)] = { reviews: 25, correct: 20, xp: 0, newWords: 0, studyMs: 0, lateNight: false };
+    const cal = activityCalendar(s, 12, now);
+    expect(cal.columns).toHaveLength(12);
+    expect(cal.columns.every((c) => c.length === 7)).toBe(true);
+    const cells = cal.columns.flat();
+    expect(cells.find((c) => c.key === dayKey(now))?.level).toBe(3);
+    expect(cal.total).toBe(25);
+    expect(cal.activeDays).toBe(1);
+    // Takvim bu haftanın Pazar gününde biter; bugünden sonraki günler "gelecek" işaretlidir
+    const todayPos = cells.findIndex((c) => c.key === dayKey(now));
+    expect(cells.slice(todayPos + 1).every((c) => c.future)).toBe(true);
+    expect(cells.slice(0, todayPos + 1).some((c) => c.future)).toBe(false);
   });
 });

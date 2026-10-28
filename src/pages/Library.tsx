@@ -7,7 +7,8 @@ import { cx, Icon } from '../components/ui';
 import { DECKS, PERSONAL_DECK_ID } from '../data/decks';
 import { slugify } from '../data/words';
 import { BOX_COLORS } from '../lib/leitner';
-import type { BoxNumber, Cefr, Word } from '../lib/types';
+import { rankedSearch, wordSearchIndex } from '../lib/text';
+import type { BoxNumber, CardState, Cefr, Word } from '../lib/types';
 import { useStore } from '../store/AppStore';
 import { allWords, cefrCounts, deckProgress } from '../store/selectors';
 
@@ -46,6 +47,27 @@ export function WordRow({ word, box }: { word: Word; box?: BoxNumber }) {
   );
 }
 
+/** Uzun kelime listelerini parça parça gösterir (telefonda yüzlerce satırı birden çizmemek için). */
+export function PagedWordList({ words, cards, page = 50 }: { words: Word[]; cards: Record<string, CardState>; page?: number }) {
+  const [limit, setLimit] = useState(page);
+  return (
+    <>
+      {words.slice(0, limit).map((w) => (
+        <WordRow key={w.id} word={w} box={cards[w.id]?.box} />
+      ))}
+      {words.length > limit && (
+        <button
+          type="button"
+          onClick={() => setLimit((l) => l + page)}
+          className="w-full py-3 rounded-xl bg-surface-container-high text-primary font-label-lg text-label-lg flex items-center justify-center gap-1.5"
+        >
+          <Icon name="expand_more" size={20} /> Daha fazla göster ({words.length - limit} kaldı)
+        </button>
+      )}
+    </>
+  );
+}
+
 export default function Library() {
   const { state, dispatch } = useStore();
   const toast = useToast();
@@ -59,18 +81,17 @@ export default function Library() {
   const rawBox = Number(params.get('kutu'));
   const boxParam: BoxNumber | 0 = rawBox >= 1 && rawBox <= 5 ? (rawBox as BoxNumber) : 0;
 
-  const words = useMemo(() => allWords(state), [state]);
+  // Kelime listesi yalnızca kendi kelimeler değişince yeniden kurulur (her tekrar sonrası değil)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const words = useMemo(() => allWords(state), [state.customWords]);
+  const index = useMemo(() => wordSearchIndex(words), [words]);
   const counts = cefrCounts(state);
   const filtering = query.trim() !== '' || cefr !== null || boxParam > 0;
-  const results = useMemo(() => {
-    const q = query.trim().toLocaleLowerCase('tr');
-    return words.filter(
-      (w) =>
-        (!q || w.word.toLowerCase().includes(q) || w.meaning.toLocaleLowerCase('tr').includes(q)) &&
-        (!cefr || w.cefr === cefr) &&
-        (!boxParam || state.cards[w.id]?.box === boxParam),
-    );
-  }, [words, query, cefr, boxParam, state.cards]);
+  // Türkçe karakter duyarsız ("kacinilmaz" → "kaçınılmaz"); tam ve baştan eşleşmeler önce gelir
+  const results = useMemo(
+    () => rankedSearch(index, query).filter((w) => (!cefr || w.cefr === cefr) && (!boxParam || state.cards[w.id]?.box === boxParam)),
+    [index, query, cefr, boxParam, state.cards],
+  );
 
   const decks = useMemo(() => {
     const list = DECKS.map((d) => ({ deck: d, progress: deckProgress(state, d.id) })).filter((x) => x.progress.total > 0 || x.deck.id === PERSONAL_DECK_ID);
@@ -199,9 +220,7 @@ export default function Library() {
       {filtering ? (
         <section className="flex flex-col gap-space-xs">
           <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider px-0.5">{results.length} sonuç</span>
-          {results.map((w) => (
-            <WordRow key={w.id} word={w} box={state.cards[w.id]?.box} />
-          ))}
+          <PagedWordList key={`${query}|${cefr}|${boxParam}`} words={results} cards={state.cards} />
           {!results.length && (
             <p className="font-body-sm text-body-sm text-on-surface-variant text-center py-6">
               Eşleşen kelime yok.{' '}
@@ -245,7 +264,7 @@ export default function Library() {
               const almost = p.percent >= 90;
               return (
                 <div key={d.id} className="bg-surface-container rounded-xl p-space-md shadow-sm hover:shadow-md transition-all flex flex-col gap-space-sm">
-                  <div className="flex items-start gap-space-md">
+                  <Link to={`/kutuphane/deste/${d.id}`} aria-label={`${d.title} destesindeki kelimeler`} className="flex items-start gap-space-md">
                     {d.image ? (
                       <img className="w-16 h-16 rounded-lg object-cover flex-shrink-0 bg-surface-container-high shadow-sm" src={d.image} alt="" loading="lazy" />
                     ) : (
@@ -266,7 +285,8 @@ export default function Library() {
                       </h3>
                       <p className="font-body-sm text-body-sm text-on-surface-variant line-clamp-1 mt-0.5">{d.description}</p>
                     </div>
-                  </div>
+                    <Icon name="chevron_right" size={20} className="text-on-surface-variant self-center shrink-0" />
+                  </Link>
                   <div className="flex flex-col gap-1.5 pt-1">
                     <div className="flex justify-between items-center text-label-sm font-label-sm">
                       <span className="text-on-surface-variant">{almost ? 'Tamamlanmak Üzere' : 'Öğrenme İlerlemesi'}</span>

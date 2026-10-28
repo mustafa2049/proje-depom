@@ -1,5 +1,7 @@
 /** Metinden kelime çıkarma yardımcıları (OCR ve altyazı analizi). */
 
+import type { Word } from './types';
+
 // İngilizcede en sık kullanılan, öğrenme listesine eklemeye değmeyecek kelimeler.
 const STOPWORDS = new Set(
   `a about above after again against all almost also am an and any are aren't as at be because been before being below
@@ -188,4 +190,46 @@ export function splitByTerm(text: string, term: string): { text: string; match: 
   }
   if (last < text.length) out.push({ text: text.slice(last), match: false });
   return out;
+}
+
+/**
+ * Arama anahtarı: büyük/küçük harf ve aksan duyarsız, Türkçe harfler ASCII karşılığına indirgenir
+ * ("Kaçınılmaz" ve "kacinilmaz" aynı anahtarı verir).
+ */
+export function searchKey(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/ı/g, 'i')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export interface SearchItem<T> {
+  item: T;
+  word: string;
+  /** Kelime, anlam ve eş anlamlıların birleşik anahtarı */
+  all: string;
+}
+
+/** Kelime listesinde arar: tam eşleşme, baştan eşleşme, kelime içinde, sonra anlam/eş anlamlı içinde. */
+export function rankedSearch<T>(index: SearchItem<T>[], query: string): T[] {
+  const q = searchKey(query);
+  if (!q) return index.map((x) => x.item);
+  const scored: { item: T; score: number; len: number }[] = [];
+  for (const x of index) {
+    let score: number;
+    if (x.word === q) score = 0;
+    else if (x.word.startsWith(q)) score = 1;
+    else if (x.word.includes(q)) score = 2;
+    else if (x.all.includes(q)) score = 3;
+    else continue;
+    scored.push({ item: x.item, score, len: x.word.length });
+  }
+  return scored.sort((a, b) => a.score - b.score || a.len - b.len).map((x) => x.item);
+}
+
+export function wordSearchIndex(words: Word[]): SearchItem<Word>[] {
+  return words.map((w) => ({ item: w, word: searchKey(w.word), all: searchKey(`${w.word} ${w.meaning} ${(w.synonyms ?? []).join(' ')}`) }));
 }

@@ -1,18 +1,29 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AiCardTools, type AiCardTab } from '../components/AiCardTools';
+import { ExtraStudyButton } from '../components/ExtraStudy';
 import { Flashcard, type SwipeDirection } from '../components/Flashcard';
 import { EmptyState, cx, Icon, PrimaryButton, ProgressBar, BoxStrip } from '../components/ui';
 import { aiAvailable } from '../lib/ai';
 import { checkAnswer, type AnswerVerdict } from '../lib/answer';
+import { useBackHandler } from '../lib/backButton';
 import { nextBox, previewInterval } from '../lib/leitner';
-import { vibrate } from '../lib/speech';
-import type { ReviewOutcome, SessionMove } from '../lib/types';
+import { speak, vibrate } from '../lib/speech';
+import type { CardState, ReviewOutcome, SessionMove } from '../lib/types';
 import { useStore } from '../store/AppStore';
-import { dailyPlan, streak } from '../store/selectors';
+import { dailyPlan, streak, unseenWords } from '../store/selectors';
 import { getDeck } from '../data/decks';
 
 const SESSION_BONUS_XP = 10;
+
+/** Geri alınabilmesi için her değerlendirmeden önceki durum */
+interface UndoEntry {
+  index: number;
+  wordId: string;
+  prev: CardState | undefined;
+  outcome: ReviewOutcome;
+  at: number;
+}
 
 export default function StudySession() {
   const { state, dispatch, words } = useStore();
@@ -21,12 +32,15 @@ export default function StudySession() {
   const deckId = params.get('deste') ?? undefined;
   const mode = params.get('mod'); // "hatalar" → yalnızca pratik, SRS'yi etkilemez
   const practiceOnly = mode === 'hatalar';
+  // "ekstra=5" → günlük plan bitince günlük kotadan bağımsız ek yeni kelime turu
+  const extra = Math.min(20, Math.max(0, Number(params.get('ekstra')) || 0));
 
   // Oturum kuyruğu bir kez oluşturulur; çalışırken değişmez.
   const [queue] = useState<string[]>(() => {
     if (practiceOnly) {
       return (state.lastSession?.moves ?? []).filter((m) => m.outcome === 'forgot').map((m) => m.wordId);
     }
+    if (extra) return unseenWords(state, deckId).slice(0, extra).map((w) => w.id);
     const plan = dailyPlan(state, Date.now(), deckId);
     return [...plan.dueIds, ...plan.newIds];
   });
@@ -40,6 +54,9 @@ export default function StudySession() {
   const moves = useRef<SessionMove[]>([]);
   const startedAt = useRef(Date.now());
   const xpEarned = useRef(0);
+  const undoStack = useRef<UndoEntry[]>([]);
+  const [canUndo, setCanUndo] = useState(false);
+  const spokenIndex = useRef(-1);
 
   const wordId = queue[index];
   const word = wordId ? words[wordId] : undefined;
@@ -61,21 +78,24 @@ export default function StudySession() {
         durationMs,
         moves: moves.current,
         xp: xpEarned.current + SESSION_BONUS_XP,
-        source: deckId ? `deck:${deckId}` : 'daily',
+        source: extra ? 'extra' : deckId ? `deck:${deckId}` : 'daily',
       },
     });
     navigate('/ogren/ozet', { replace: true });
-  }, [dispatch, navigate, practiceOnly, deckId]);
+  }, [dispatch, navigate, practiceOnly, deckId, extra]);
 
   const rate = useCallback(
     (outcome: ReviewOutcome) => {
       if (!wordId || exiting) return;
       vibrate(outcome === 'forgot' ? 60 : 30);
       const from = card?.box ?? 0;
+      const at = Date.now();
+      undoStack.current.push({ index, wordId, prev: card, outcome, at });
+      setCanUndo(true);
       if (!practiceOnly) {
         moves.current.push({ wordId, from, to: nextBox(from, outcome), outcome });
         xpEarned.current += outcome === 'forgot' ? 1 : 5;
-        dispatch({ type: 'review', wordId, outcome });
+        dispatch({ type: 'review', wordId, outcome, now: at });
       }
       setExiting(outcome === 'know' ? 'right' : outcome === 'forgot' ? 'left' : 'up');
       setTimeout(() => {
@@ -91,6 +111,33 @@ export default function StudySession() {
     [wordId, exiting, card, practiceOnly, dispatch, index, queue.length, finish],
   );
 
+  /** Son cevabı geri alır ve o karta döner (yanlış butona basıldığında). */
+  const undo = useCallback(() => {
+    if (exiting) return;
+    const last = undoStack.current.pop();
+    if (!last) return;
+    if (!practiceOnly) {
+      moves.current.pop();
+      xpEarned.current -= last.outcome === 'forgot' ? 1 : 5;
+      dispatch({ type: 'undoReview', wordId: last.wordId, prev: last.prev, outcome: last.outcome, at: last.at });
+    }
+    setCanUndo(undoStack.current.length > 0);
+    spokenIndex.current = -1;
+    setIndex(last.index);
+    setFlipped(false);
+    setTyped('');
+    setVerdict(null);
+    setAiTab(null);
+    vibrate(20);
+  }, [exiting, practiceOnly, dispatch]);
+
+  // Android geri tuşu: cevaplanmış kart varsa oturumu kaydedip özete geç
+  useBackHandler(() => {
+    if (!moves.current.length) return false;
+    finish();
+    return true;
+  });
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (aiTab || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
@@ -100,10 +147,11 @@ export default function StudySession() {
       } else if (e.key === 'ArrowLeft' || e.key === '1') rate('forgot');
       else if (e.key === 'ArrowUp' || e.key === '2') rate('easy');
       else if (e.key === 'ArrowRight' || e.key === '3') rate('know');
+      else if (e.key === 'Backspace' || e.key === 'z') undo();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [rate, aiTab]);
+  }, [rate, undo, aiTab]);
 
   const knowTarget = useMemo(() => nextBox(card?.box ?? 0, 'know'), [card]);
   // Kart yönü: karışık modda kartların yarısı ters sorulur (oturum boyunca sabit)
@@ -111,6 +159,16 @@ export default function StudySession() {
   const reverse = direction === 'tr-en' || (direction === 'mixed' && (index * 7 + (wordId?.length ?? 0)) % 2 === 1);
   const typeMode = state.profile.typeAnswer;
   const ai = aiAvailable();
+
+  // Otomatik seslendirme: İngilizce kelime görünür olduğunda bir kez okunur (ters kartta cevap çevrilince)
+  const { autoSpeak, ttsRate } = state.profile;
+  useEffect(() => {
+    if (!autoSpeak || !word || exiting) return;
+    const englishVisible = reverse ? flipped : true;
+    if (!englishVisible || spokenIndex.current === index) return;
+    spokenIndex.current = index;
+    speak(word.word, { rate: ttsRate });
+  }, [autoSpeak, ttsRate, word, index, flipped, reverse, exiting]);
   const submitTyped = () => {
     if (!word || !typed.trim()) return;
     const v = checkAnswer(typed, word, reverse);
@@ -132,6 +190,7 @@ export default function StudySession() {
           }
           action={
             <div className="flex flex-col gap-2 w-full">
+              {!practiceOnly && <ExtraStudyButton deckId={deckId} replace />}
               <PrimaryButton onClick={() => navigate('/pratik')}>
                 <Icon name="psychology" size={20} /> Pratik Modüllerine Git
               </PrimaryButton>
@@ -161,6 +220,17 @@ export default function StudySession() {
             >
               <Icon name="close" size={18} />
             </button>
+            {canUndo && (
+              <button
+                aria-label="Son cevabı geri al"
+                type="button"
+                onClick={undo}
+                title="Geri al"
+                className="w-9 h-9 rounded-full bg-surface-container-high text-primary flex items-center justify-center active:scale-95 transition-transform animate-fade-in"
+              >
+                <Icon name="undo" size={18} />
+              </button>
+            )}
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md">
               <Icon name="bolt" size={16} className="text-tertiary" />
               <span>
@@ -214,7 +284,7 @@ export default function StudySession() {
             autoCapitalize="none"
             spellCheck={false}
             lang={reverse ? 'en' : 'tr'}
-            className="flex-1 h-12 px-4 rounded-xl bg-surface-container-high text-on-surface font-body-md text-body-md outline-none focus:ring-1 focus:ring-primary placeholder:text-outline"
+            className="flex-1 min-w-0 h-12 px-4 rounded-xl bg-surface-container-high text-on-surface font-body-md text-body-md outline-none focus:ring-1 focus:ring-primary placeholder:text-outline"
           />
           <button type="submit" disabled={!typed.trim()} className="h-12 px-4 rounded-xl bg-primary text-on-primary font-label-lg text-label-lg disabled:opacity-40">
             Kontrol
