@@ -36,7 +36,9 @@ function buildQuestions(items: AiClozeItem[], words: Record<string, Word>): Ques
     const others = items.filter((o) => o.wordId !== it.wordId && o.answer.toLowerCase() !== it.answer.toLowerCase());
     // Önce aynı türden kelimeler: seçenekler dilbilgisi açısından da makul görünsün
     const ranked = [...shuffle(others.filter((o) => words[o.wordId]?.pos === pos)), ...shuffle(others.filter((o) => words[o.wordId]?.pos !== pos))];
-    return { ...it, options: shuffle([it.answer, ...ranked.slice(0, 3).map((o) => o.answer)]) };
+    // Aynı yüzey biçimli çeldiriciler tekrar etmesin
+    const distractors = [...new Set(ranked.map((o) => o.answer))].slice(0, 3);
+    return { ...it, options: shuffle([it.answer, ...distractors]) };
   });
 }
 

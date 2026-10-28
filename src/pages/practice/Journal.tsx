@@ -305,8 +305,8 @@ export default function Journal() {
           </div>
           {analysis.issues.length > 0 && (
             <div className="flex flex-col gap-1.5">
-              {analysis.issues.map((i) => (
-                <div key={i.message} className="flex items-start gap-2 p-2 rounded-lg bg-surface-container-lowest">
+              {analysis.issues.map((i, n) => (
+                <div key={n} className="flex items-start gap-2 p-2 rounded-lg bg-surface-container-lowest">
                   <Icon name={i.type === 'l1' ? 'translate' : 'spellcheck'} size={16} className={i.type === 'l1' ? 'text-error mt-0.5' : 'text-tertiary mt-0.5'} />
                   <span className="font-body-sm text-body-sm text-on-surface">{i.message}</span>
                 </div>
@@ -319,8 +319,8 @@ export default function Journal() {
                 <Icon name="auto_awesome" size={18} fill />
                 <span className="font-label-md text-label-md font-semibold">Üst Seviye Yükseltme Önerileri</span>
               </div>
-              {analysis.suggestions.map((s) => (
-                <div key={s.from} className="p-space-sm rounded-lg bg-surface-container-lowest flex flex-col gap-space-xs">
+              {analysis.suggestions.map((s, n) => (
+                <div key={n} className="p-space-sm rounded-lg bg-surface-container-lowest flex flex-col gap-space-xs">
                   <div className="flex items-center gap-1.5 text-on-surface-variant font-label-sm text-label-sm">
                     <span className="w-1.5 h-1.5 rounded-full bg-outline" />
                     <span className="line-through">{s.from}</span>

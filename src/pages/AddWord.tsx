@@ -119,7 +119,16 @@ export default function AddWord() {
       toast('Kelime ve Türkçe karşılık gerekli', { tone: 'error' });
       return;
     }
+    // ğ/ı/ş İngilizcede geçmez: büyük olasılıkla Türkçe karşılık yanlış alana yazıldı
+    if (/[ğışĞİŞ]/.test(word)) {
+      toast('Bu alan İngilizce kelime içindir', { description: 'Türkçe karşılığı “Türkçe Karşılık” alanına yaz.', tone: 'error' });
+      return;
+    }
     const id = slugify(word);
+    if (!id) {
+      toast('Geçerli bir İngilizce kelime yaz', { tone: 'error' });
+      return;
+    }
     const examples = [
       { en: form.ex1.trim(), tr: form.ex1tr.trim() },
       { en: form.ex2.trim(), tr: form.ex2tr.trim() },

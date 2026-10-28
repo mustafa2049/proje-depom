@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { SubScreen } from '../../components/Layout';
 import { cx, Icon, SpeakButton } from '../../components/ui';
 import { POS_LABELS } from '../../data/words';
@@ -250,9 +251,17 @@ export default function FilmScenes() {
             </button>
           </>
         ) : (
-          <p className="font-body-sm text-body-sm text-on-surface-variant">
-            “{selected}” için sözlük kaydı bulunamadı{navigator.onLine ? '' : ' (çevrimdışısın)'}. Kütüphane → Kendi Kelimeni Ekle ile elle ekleyebilirsin.
-          </p>
+          <div className="flex flex-col gap-2">
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              “{selected}” için sözlük kaydı bulunamadı{navigator.onLine ? '' : ' (çevrimdışısın)'}.
+            </p>
+            <Link
+              to={`/kutuphane/ekle?kelime=${encodeURIComponent(selected)}`}
+              className="self-start flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-high text-primary font-label-md text-label-md"
+            >
+              <Icon name="add_circle" size={16} /> “{selected}” kelimesini ekle
+            </Link>
+          </div>
         )}
       </section>
 

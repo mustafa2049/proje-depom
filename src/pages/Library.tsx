@@ -107,6 +107,10 @@ export default function Library() {
       toast('Kelime ve çeviri gerekli', { tone: 'error' });
       return;
     }
+    if (/[ğışĞİŞ]/.test(word) || !slugify(word)) {
+      toast('İlk alana İngilizce kelimeyi yaz', { description: 'Türkçe karşılık ikinci alana yazılır.', tone: 'error' });
+      return;
+    }
     const id = slugify(word);
     if (words.some((w) => w.id === id && !w.custom)) {
       dispatch({ type: 'introduce', wordId: id });

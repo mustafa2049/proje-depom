@@ -161,7 +161,10 @@ function ExamplesPanel({ word, hidden, active }: { word: Word; hidden: boolean; 
   }, [active]);
 
   const save = (ex: { en: string; tr: string }) => {
-    dispatch({ type: 'updateWord', word: { ...word, examples: [...word.examples, ex].slice(-5) } });
+    // İlk (sözlükteki) örnek hep korunur; üstüne en fazla 4 kayıtlı örnek tutulur
+    const [first, ...rest] = word.examples.filter((e) => e.en !== ex.en);
+    const examples = first ? [first, ...[...rest, ex].slice(-4)] : [ex];
+    dispatch({ type: 'updateWord', word: { ...word, examples } });
     setSaved((s) => [...s, ex.en]);
     toast('Örnek karta eklendi', { icon: 'bookmark_added' });
   };

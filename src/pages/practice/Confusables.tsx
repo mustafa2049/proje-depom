@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { SubScreen } from '../../components/Layout';
 import { cx, Icon, SpeakButton, useCountdown } from '../../components/ui';
 import { CONFUSABLES } from '../../data/confusables';
@@ -22,10 +22,6 @@ export default function Confusables() {
     if (choice === null) setChoice(question.answer === 0 ? 1 : 0); // süre dolunca yanlış sayılır
   });
 
-  useEffect(() => {
-    setLeft(QUESTION_SECONDS);
-  }, [q, pairIndex, setLeft]);
-
   const answer = (c: 0 | 1) => {
     if (choice !== null) return;
     setChoice(c);
@@ -37,16 +33,24 @@ export default function Confusables() {
     }
   };
 
+  // Süre, soru değiştiği anda (aynı render'da) sıfırlanmalı; aksi halde süresi dolmuş bir sorudan
+  // sonra gelen soru, sayaç hâlâ 0 iken başladığı için hemen "süre doldu" sayılır.
   const nextQuestion = () => {
+    setLeft(QUESTION_SECONDS);
     setChoice(null);
     setQ((n) => n + 1);
   };
 
+  const restart = () => {
+    setLeft(QUESTION_SECONDS);
+    setQ(0);
+    setCorrect(0);
+    setChoice(null);
+  };
+
   const nextPair = () => {
     setPairIndex((i) => (i + 1) % CONFUSABLES.length);
-    setQ(0);
-    setChoice(null);
-    setCorrect(0);
+    restart();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -76,9 +80,7 @@ export default function Confusables() {
                 aria-label={p.title}
                 onClick={() => {
                   setPairIndex(i);
-                  setQ(0);
-                  setChoice(null);
-                  setCorrect(0);
+                  restart();
                 }}
                 className={cx('w-2.5 h-2.5 rounded-full', i === pairIndex ? 'bg-primary' : 'bg-surface-container-highest')}
               />
@@ -148,8 +150,9 @@ export default function Confusables() {
           </div>
         </div>
         <div className="grid grid-cols-4 gap-1.5 p-2 rounded-lg bg-surface-container-lowest text-center">
-          {pair.memory.pills.map((p) => (
-            <div key={p.small} className={cx('flex flex-col py-1 px-0.5 rounded', pillTone[p.tone])}>
+          {/* Aynı metinli kutucuklar olabilir (ör. iki "okunuş"): anahtar sıra numarasıdır */}
+          {pair.memory.pills.map((p, i) => (
+            <div key={`${pair.id}-${i}`} className={cx('flex flex-col py-1 px-0.5 rounded', pillTone[p.tone])}>
               <span className="font-headline-sm text-headline-sm font-bold">{p.big}</span>
               <span className="font-label-sm text-label-sm leading-tight">{p.small}</span>
             </div>
@@ -161,8 +164,8 @@ export default function Confusables() {
               <Icon name="warning" size={16} />
               <span className="font-label-md text-label-md font-bold">İleri Düzey İstisnalar</span>
             </div>
-            {pair.exceptions.map((e) => (
-              <p key={e} className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">• {e}</p>
+            {pair.exceptions.map((e, i) => (
+              <p key={`${pair.id}-${i}`} className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">• {e}</p>
             ))}
           </div>
         )}
@@ -178,7 +181,7 @@ export default function Confusables() {
             <p className="font-body-sm text-body-sm text-on-surface-variant">
               {correct === pair.questions.length ? 'Kusursuz! Bu ayrımı artık biliyorsun.' : 'İpuçlarını tekrar oku ve testi yeniden dene.'}
             </p>
-            <button type="button" onClick={() => { setQ(0); setCorrect(0); setChoice(null); }} className="font-label-lg text-label-lg text-primary flex items-center gap-1">
+            <button type="button" onClick={restart} className="font-label-lg text-label-lg text-primary flex items-center gap-1">
               <Icon name="replay" size={18} /> Testi Tekrarla
             </button>
           </div>
