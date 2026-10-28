@@ -24,6 +24,9 @@ POS_KEYS = {'noun': 'NOUN', 'verb': 'VERB', 'adjective': 'ADJ', 'adverb': 'ADV'}
 # aradaki sessizlikten kesilir. "Okay." uygun değil: spaCy "Okay." ifadesini bazen tek parça sayıyor,
 # nokta düşüyor ve duraklama oluşmuyor; "Listen." her denemede 120–210 ms'lik bir duraklama üretti.
 CARRIER = 'Listen.'
+# Whisper ile yapılan kontrolde yanlış duyulan kelimeler için elle verilen okunuş
+# ("strange" varsayılan /A/ ile "strained" gibi duyuluyordu).
+PHONEME_OVERRIDES = {'strange': 'stɹˈeɪnʤ'}
 
 
 def unique_tasks(items, skip_dir, kind=None):
@@ -60,7 +63,7 @@ def spoken_input(x, lexicon):
         return text
     # Tek başına okunan kelime/kalıp: noktayla bitince doğal, düşen bir tonlama alır.
     end = '' if text[-1] in '.!?' else '.'
-    ph = homograph_phonemes(lexicon, text, x.get('pos'))
+    ph = PHONEME_OVERRIDES.get(text) or homograph_phonemes(lexicon, text, x.get('pos'))
     return f'[{text}](/{ph}/){end}' if ph else text + end
 
 
