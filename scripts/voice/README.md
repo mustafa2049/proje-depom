@@ -10,6 +10,11 @@ veya cihaz sesine döner.
 Eş yazımlı kelimelerde (live, close, affect, record…) sözlükteki türe uyan okunuş seçilir.
 Kayıtlar Kokoro'nun 0.9 hızında üretilir; uygulamadaki varsayılan telaffuz hızı (0.9x) bu doğal hıza denk gelir.
 
+Kokoro çok kısa girdilerde bazen kelimenin önüne kısa bir "ı/a" sesi ekler ("seed" → "a seed"). Bu yüzden
+kelime ve kalıplar `Listen. <kelime>.` biçiminde üretilir ve taşıyıcıyla kelime arasındaki sessizlikten
+kesilir. Kayıtlar Whisper large-v3 ile yazıya dökülerek kontrol edildi; kalan farklar sesteş kelimeler
+(route/root, hostel/hostile) ve İngiliz/Amerikan yazım farklarıdır.
+
 ## Yeniden üretme (yeni kelime eklendiğinde)
 
 Gereken: Python 3.12, ffmpeg (libopus). Kayıt eklenmemiş kelimeler cihaz sesiyle okunur; `npm test`
