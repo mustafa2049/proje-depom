@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { SubScreen } from '../components/Layout';
 import { Toggle } from '../components/StudySettings';
 import { cx, EmptyState, Icon, PrimaryButton } from '../components/ui';
 import { getDeck, PERSONAL_DECK_ID } from '../data/decks';
 import { rankedSearch, wordSearchIndex } from '../lib/text';
+import type { Word } from '../lib/types';
 import { useStore } from '../store/AppStore';
 import { allWords, deckProgress } from '../store/selectors';
 import { PagedWordList } from './Library';
@@ -23,13 +24,10 @@ export default function DeckDetail() {
   const { id = '' } = useParams();
   const { state, dispatch } = useStore();
   const navigate = useNavigate();
-  const [filter, setFilter] = useState<Filter>('all');
-  const [query, setQuery] = useState('');
   const deck = getDeck(id);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const words = useMemo(() => allWords(state).filter((w) => w.deckId === id), [state.customWords, id]);
-  const index = useMemo(() => wordSearchIndex(words), [words]);
 
   if (!deck) {
     return (
@@ -45,7 +43,6 @@ export default function DeckDetail() {
   };
   const counts: Record<Filter, number> = { all: words.length, new: 0, learning: 0, mastered: 0 };
   for (const w of words) counts[status(w.id)]++;
-  const shown = rankedSearch(index, query).filter((w) => filter === 'all' || status(w.id) === filter);
   const enrolled = state.enrolledDecks.includes(deck.id);
   const p = deckProgress(state, deck.id);
 
@@ -114,55 +111,63 @@ export default function DeckDetail() {
         )}
       </section>
 
-      <section className="flex flex-col gap-space-sm">
-        <div className="flex items-center gap-space-sm bg-surface-container-high rounded-xl px-3 py-2 focus-within:bg-surface-container-highest">
-          <Icon name="search" size={20} className="text-outline" />
-          <input
-            aria-label="Destede ara"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Bu destede ara…"
-            className="bg-transparent outline-none text-on-surface placeholder:text-outline font-body-md text-body-md w-full min-w-0"
-          />
-          {query && (
-            <button type="button" aria-label="Aramayı temizle" onClick={() => setQuery('')} className="text-on-surface-variant">
-              <Icon name="cancel" size={18} />
-            </button>
-          )}
-        </div>
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-margin px-margin">
-          {FILTERS.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => setFilter(f.id)}
-              className={cx(
-                'shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md transition-colors',
-                filter === f.id ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant',
-              )}
-            >
-              {f.label} <span className="opacity-70 font-normal">{counts[f.id]}</span>
-            </button>
-          ))}
-        </div>
-        <div className="flex flex-col gap-space-xs">
-          <PagedWordList key={`${filter}|${query}`} words={shown} cards={state.cards} />
-          {!shown.length && (
-            <p className="font-body-sm text-body-sm text-on-surface-variant text-center py-6">
-              {counts.all === 0 ? (
-                <>
-                  Bu destede henüz kelime yok.{' '}
-                  <Link to="/kutuphane/ekle" className="text-primary underline">
-                    Kelime ekle
-                  </Link>
-                </>
-              ) : (
-                'Bu filtrede kelime yok.'
-              )}
-            </p>
-          )}
-        </div>
-      </section>
+      <WordCollection words={words} emptyHint={<>Bu destede henüz kelime yok. <Link to="/kutuphane/ekle" className="text-primary underline">Kelime ekle</Link></>} />
     </SubScreen>
+  );
+}
+
+/** Bir kelime koleksiyonu (deste ya da seviye): durum filtresi, arama ve sayfalı liste. */
+export function WordCollection({ words, emptyHint }: { words: Word[]; emptyHint: ReactNode }) {
+  const { state } = useStore();
+  const [filter, setFilter] = useState<Filter>('all');
+  const [query, setQuery] = useState('');
+  const index = useMemo(() => wordSearchIndex(words), [words]);
+  const status = (wid: string): Filter => {
+    const c = state.cards[wid];
+    return !c ? 'new' : c.box >= 4 ? 'mastered' : 'learning';
+  };
+  const counts: Record<Filter, number> = { all: words.length, new: 0, learning: 0, mastered: 0 };
+  for (const w of words) counts[status(w.id)]++;
+  const shown = rankedSearch(index, query).filter((w) => filter === 'all' || status(w.id) === filter);
+
+  return (
+    <section className="flex flex-col gap-space-sm">
+      <div className="flex items-center gap-space-sm bg-surface-container-high rounded-xl px-3 py-2 focus-within:bg-surface-container-highest">
+        <Icon name="search" size={20} className="text-outline" />
+        <input
+          aria-label="Listede ara"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Bu listede ara…"
+          className="bg-transparent outline-none text-on-surface placeholder:text-outline font-body-md text-body-md w-full min-w-0"
+        />
+        {query && (
+          <button type="button" aria-label="Aramayı temizle" onClick={() => setQuery('')} className="text-on-surface-variant">
+            <Icon name="cancel" size={18} />
+          </button>
+        )}
+      </div>
+      <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-margin px-margin">
+        {FILTERS.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            onClick={() => setFilter(f.id)}
+            className={cx(
+              'shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md transition-colors',
+              filter === f.id ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant',
+            )}
+          >
+            {f.label} <span className="opacity-70 font-normal">{counts[f.id]}</span>
+          </button>
+        ))}
+      </div>
+      <div className="flex flex-col gap-space-xs">
+        <PagedWordList key={`${filter}|${query}`} words={shown} cards={state.cards} />
+        {!shown.length && (
+          <p className="font-body-sm text-body-sm text-on-surface-variant text-center py-6">{counts.all === 0 ? emptyHint : 'Bu filtrede kelime yok.'}</p>
+        )}
+      </div>
+    </section>
   );
 }

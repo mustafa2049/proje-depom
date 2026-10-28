@@ -21,6 +21,7 @@ const Practice = lazy(() => import('./pages/Practice'));
 const Library = lazy(() => import('./pages/Library'));
 const AddWord = lazy(() => import('./pages/AddWord'));
 const DeckDetail = lazy(() => import('./pages/DeckDetail'));
+const LevelDetail = lazy(() => import('./pages/LevelDetail'));
 const WordDetail = lazy(() => import('./pages/WordDetail'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Quiz = lazy(() => import('./pages/practice/Quiz'));
@@ -143,6 +144,7 @@ export default function App() {
               <Route path="/kutuphane" element={<Library />} />
               <Route path="/kutuphane/ekle" element={<AddWord />} />
               <Route path="/kutuphane/deste/:id" element={<DeckDetail />} />
+              <Route path="/kutuphane/seviye/:level" element={<LevelDetail />} />
               <Route path="/kelime/:id" element={<WordDetail />} />
               <Route path="/profil" element={<Profile />} />
               <Route path="*" element={<Navigate to="/" replace />} />

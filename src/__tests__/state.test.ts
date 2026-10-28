@@ -3,7 +3,7 @@ import { SEED_WORDS } from '../data/words';
 import { DECKS } from '../data/decks';
 import { splitByTerm } from '../lib/text';
 import { dayIndex, dayKey } from '../lib/leitner';
-import { activityCalendar, activityLevel, allWords, boxCounts, coachStats, dailyPlan, leeches, reviewForecast, wordMap } from '../store/selectors';
+import { activityCalendar, activityLevel, allWords, boxCounts, CEFR_LEVELS, coachStats, currentLevel, dailyPlan, leeches, levelPathWords, reviewForecast, unseenWords, wordMap } from '../store/selectors';
 import { createInitialState, migrate, reducer } from '../store/state';
 
 const now = new Date(2026, 9, 27, 10, 0).getTime();
@@ -176,5 +176,38 @@ describe('istatistik takvimleri', () => {
     const todayPos = cells.findIndex((c) => c.key === dayKey(now));
     expect(cells.slice(todayPos + 1).every((c) => c.future)).toBe(true);
     expect(cells.slice(0, todayPos + 1).some((c) => c.future)).toBe(false);
+  });
+});
+
+describe('seviye yolu', () => {
+  it('yeni kelimeler A1’den başlar, seviye bitince bir sonrakine geçer', () => {
+    let s = createInitialState(now);
+    expect(s.profile.newWordOrder).toBe('level');
+    const plan = dailyPlan(s, now);
+    expect(plan.newIds.length).toBe(s.profile.newPerDay);
+    expect(plan.newIds.every((id) => wordMap(s)[id].cefr === 'A1')).toBe(true);
+    // Tüm A1 kelimeleri kutuya girince sıradaki yeni kelimeler A2'den gelir
+    for (const w of allWords(s).filter((x) => x.cefr === 'A1')) s = reducer(s, { type: 'introduce', wordId: w.id, now });
+    expect(currentLevel(s)).toBe('A2');
+    expect(unseenWords(s)[0].cefr).toBe('A2');
+  });
+  it('başlangıç seviyesinin altındaki kelimeler atlanır; deste modu seçili destelerden alır', () => {
+    let s = createInitialState(now);
+    s = reducer(s, { type: 'setProfile', patch: { startLevel: 'B1' } });
+    expect(unseenWords(s).every((w) => ['B1', 'B2', 'C1', 'C2'].includes(w.cefr))).toBe(true);
+    expect(unseenWords(s)[0].cefr).toBe('B1');
+    s = reducer(s, { type: 'setProfile', patch: { newWordOrder: 'deck' } });
+    expect(unseenWords(s).every((w) => s.enrolledDecks.includes(w.deckId))).toBe(true);
+  });
+  it('seviye yolu her kelimeyi bir kez ve seviye sırasıyla içerir; seviye kapsamı yalnızca o seviyeyi verir', () => {
+    const s = createInitialState(now);
+    const path = levelPathWords(s);
+    expect(path).toHaveLength(allWords(s).length);
+    expect(new Set(path.map((w) => w.id)).size).toBe(path.length);
+    const ranks = path.map((w) => CEFR_LEVELS.indexOf(w.cefr));
+    expect(ranks.every((r, i) => i === 0 || r >= ranks[i - 1])).toBe(true);
+    const plan = dailyPlan(s, now, { level: 'B2' });
+    expect(plan.newIds.length).toBeGreaterThan(0);
+    expect(plan.newIds.every((id) => wordMap(s)[id].cefr === 'B2')).toBe(true);
   });
 });

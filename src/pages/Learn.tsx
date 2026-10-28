@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { TabScreen } from '../components/Layout';
 import { ExtraStudyButton } from '../components/ExtraStudy';
+import { LevelPathList } from '../components/LevelPath';
 import { cx, Icon, PrimaryButton, ProgressBar } from '../components/ui';
 import { DECKS } from '../data/decks';
 import { BOX_COLORS } from '../lib/leitner';
@@ -21,6 +22,7 @@ export default function Learn() {
   const due = dueCards(state);
   const dueByBox = ([1, 2, 3, 4, 5] as BoxNumber[]).map((b) => due.filter((c) => c.box === b).length);
   const leechCount = leeches(state).length;
+  const levelMode = state.profile.newWordOrder === 'level';
 
   return (
     <TabScreen subtitle="Öğren">
@@ -96,9 +98,21 @@ export default function Learn() {
       </section>
 
       <section className="flex flex-col gap-space-sm">
-        <div className="flex items-center justify-between px-0.5">
-          <h3 className="font-headline-sm text-headline-sm text-on-surface">Aktif Desteler</h3>
-          <span className="font-label-sm text-label-sm text-on-surface-variant">Yeni kelimeler bu destelerden gelir</span>
+        <div className="flex items-center justify-between gap-2 px-0.5">
+          <h3 className="font-headline-sm text-headline-sm text-on-surface">Seviye Yolu</h3>
+          <span className="font-label-sm text-label-sm text-on-surface-variant text-right">
+            {levelMode ? 'Yeni kelimeler A1’den C2’ye sırayla gelir' : 'Seviyeye göre çalış'}
+          </span>
+        </div>
+        <LevelPathList />
+      </section>
+
+      <section className="flex flex-col gap-space-sm">
+        <div className="flex items-center justify-between gap-2 px-0.5">
+          <h3 className="font-headline-sm text-headline-sm text-on-surface">{levelMode ? 'Konu Desteleri' : 'Aktif Desteler'}</h3>
+          <span className="font-label-sm text-label-sm text-on-surface-variant text-right">
+            {levelMode ? 'Bir konuya odaklanmak için' : 'Yeni kelimeler bu destelerden gelir'}
+          </span>
         </div>
         {DECKS.map((d) => {
           const enrolled = state.enrolledDecks.includes(d.id);
@@ -106,19 +120,21 @@ export default function Learn() {
           if (!p.total) return null;
           return (
             <div key={d.id} className="bg-surface-container-low rounded-xl px-space-md py-3 flex items-center gap-3">
-              <button
-                type="button"
-                role="switch"
-                aria-checked={enrolled}
-                aria-label={`${d.title} destesini ${enrolled ? 'devre dışı bırak' : 'etkinleştir'}`}
-                onClick={() => dispatch({ type: enrolled ? 'unenrollDeck' : 'enrollDeck', deckId: d.id })}
-                className={cx(
-                  'w-11 h-6 rounded-full p-0.5 transition-colors shrink-0',
-                  enrolled ? 'bg-secondary' : 'bg-surface-container-highest',
-                )}
-              >
-                <span className={cx('block w-5 h-5 rounded-full bg-on-secondary transition-transform', enrolled ? 'translate-x-5 bg-surface' : 'bg-outline')} />
-              </button>
+              {!levelMode && (
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={enrolled}
+                  aria-label={`${d.title} destesini ${enrolled ? 'devre dışı bırak' : 'etkinleştir'}`}
+                  onClick={() => dispatch({ type: enrolled ? 'unenrollDeck' : 'enrollDeck', deckId: d.id })}
+                  className={cx(
+                    'w-11 h-6 rounded-full p-0.5 transition-colors shrink-0',
+                    enrolled ? 'bg-secondary' : 'bg-surface-container-highest',
+                  )}
+                >
+                  <span className={cx('block w-5 h-5 rounded-full bg-on-secondary transition-transform', enrolled ? 'translate-x-5 bg-surface' : 'bg-outline')} />
+                </button>
+              )}
               <Link to={`/kutuphane/deste/${d.id}`} className="flex flex-col min-w-0 flex-1 gap-1">
                 <span className="font-label-lg text-label-lg text-on-surface truncate">
                   {d.emoji} {d.title}

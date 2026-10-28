@@ -2,7 +2,7 @@ import { dayKey } from '../lib/leitner';
 import { remindersSupported, scheduleReminders } from '../lib/reminders';
 import type { CardDirection } from '../lib/types';
 import { useStore } from '../store/AppStore';
-import { dailyPlan, streak } from '../store/selectors';
+import { CEFR_LEVELS, dailyPlan, LEVEL_NAMES, streak } from '../store/selectors';
 import { useToast } from './Toast';
 import { cx, Icon } from './ui';
 
@@ -62,6 +62,47 @@ export function StudySettings() {
       <span className="font-label-lg text-label-lg text-on-surface flex items-center gap-1.5">
         <Icon name="style" size={18} className="text-primary" /> Kart Çalışma
       </span>
+      <div className="flex flex-col gap-1.5">
+        <span className="font-label-md text-label-md text-on-surface-variant">Yeni kelimeler nereden gelsin?</span>
+        <div className="flex p-1 rounded-lg bg-surface-container-lowest gap-1">
+          {(
+            [
+              ['level', 'Seviye sırasıyla (A1→C2)'],
+              ['deck', 'Seçtiğim destelerden'],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => dispatch({ type: 'setProfile', patch: { newWordOrder: id } })}
+              className={cx('flex-1 py-2 px-1 rounded-md font-label-md text-label-md', p.newWordOrder === id ? 'bg-primary text-on-primary' : 'text-on-surface-variant')}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {p.newWordOrder === 'level' && (
+        <div className="flex flex-col gap-1.5">
+          <span className="font-label-md text-label-md text-on-surface-variant">Başlangıç seviyem</span>
+          <div className="grid grid-cols-6 gap-1">
+            {CEFR_LEVELS.map((l) => (
+              <button
+                key={l}
+                type="button"
+                aria-label={`Başlangıç seviyesi ${l} ${LEVEL_NAMES[l]}`}
+                onClick={() => dispatch({ type: 'setProfile', patch: { startLevel: l } })}
+                className={cx('py-2 rounded-md font-label-md text-label-md', p.startLevel === l ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest text-on-surface-variant')}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+          <span className="font-label-sm text-label-sm text-on-surface-variant font-normal">
+            {LEVEL_NAMES[p.startLevel]} seviyesinden başlanır{p.startLevel !== 'A1' ? '; daha alt seviyelerin yeni kelimeleri atlanır' : ''}.
+          </span>
+        </div>
+      )}
       <div className="flex flex-col gap-1.5">
         <span className="font-label-md text-label-md text-on-surface-variant">Kartın soru yüzü</span>
         <div className="flex p-1 rounded-lg bg-surface-container-lowest gap-1">

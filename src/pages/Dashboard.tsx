@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { TabScreen } from '../components/Layout';
 import { ExtraStudyButton } from '../components/ExtraStudy';
+import { LevelPathCard } from '../components/LevelPath';
 import { Sheet } from '../components/Sheet';
 import { cx, Icon } from '../components/ui';
 import { BOX_COLORS, BOX_INTERVALS, BOX_LABELS, dayKey, longestStreak } from '../lib/leitner';
@@ -144,6 +145,8 @@ export default function Dashboard() {
         )}
         {plan.total === 0 && total > 0 && <ExtraStudyButton className="relative z-10 min-h-[44px] bg-surface-container-high/80" />}
       </section>
+
+      <LevelPathCard />
 
       {/* İnatçı kelime uyarısı */}
       {leechList.length > 0 && (

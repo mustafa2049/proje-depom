@@ -112,7 +112,13 @@ export interface Profile {
   autoSpeak: boolean;
   /** Belgeler/LexiLearn klasörüne günlük otomatik yedek (yalnızca Android) */
   autoBackup: boolean;
+  /** Yeni kelimelerin sırası: seviye yolu (A1 → C2) ya da seçili desteler */
+  newWordOrder: NewWordOrder;
+  /** Seviye yolunun başladığı seviye (altındaki kelimeler atlanır) */
+  startLevel: Cefr;
 }
+
+export type NewWordOrder = 'level' | 'deck';
 
 export type CardDirection = 'en-tr' | 'tr-en' | 'mixed';
 

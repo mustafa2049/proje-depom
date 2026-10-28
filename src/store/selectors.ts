@@ -1,7 +1,7 @@
 import { DECKS } from '../data/decks';
 import { SEED_WORD_MAP, SEED_WORDS } from '../data/words';
 import { computeStreak, dayIndex, dayKey, dayKeyFromIndex, isDue, isLeech, longestStreak } from '../lib/leitner';
-import type { AppState, BoxNumber, CardState, Word } from '../lib/types';
+import type { AppState, BoxNumber, CardState, Cefr, Word } from '../lib/types';
 
 /** Tohum sözlük + kullanıcının kelimeleri (aynı kimlikli kullanıcı kaydı tohumdakinin yerine geçer). */
 export function wordsFrom(customWords: Word[]): Word[] {
@@ -39,10 +39,33 @@ export function boxCounts(state: AppState): Record<BoxNumber, number> {
   return counts;
 }
 
-export function dueCards(state: AppState, now = Date.now(), deckId?: string): CardState[] {
+/** Çalışmanın kapsamı: tek deste, tek seviye ya da (boşsa) günlük plan. */
+export interface StudyScope {
+  deckId?: string;
+  level?: Cefr;
+}
+
+export const CEFR_LEVELS: Cefr[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+
+export const LEVEL_NAMES: Record<Cefr, string> = {
+  A1: 'Başlangıç',
+  A2: 'Temel',
+  B1: 'Orta',
+  B2: 'Orta Üstü',
+  C1: 'İleri',
+  C2: 'Ustalık',
+};
+
+const levelRank = (c: Cefr) => CEFR_LEVELS.indexOf(c);
+
+function inScope(w: Word, scope?: StudyScope): boolean {
+  return (!scope?.deckId || w.deckId === scope.deckId) && (!scope?.level || w.cefr === scope.level);
+}
+
+export function dueCards(state: AppState, now = Date.now(), scope?: StudyScope): CardState[] {
   const words = wordMap(state);
   return Object.values(state.cards)
-    .filter((c) => words[c.wordId] && isDue(c, now) && (!deckId || words[c.wordId].deckId === deckId))
+    .filter((c) => words[c.wordId] && isDue(c, now) && inScope(words[c.wordId], scope))
     .sort((a, b) => a.box - b.box || a.dueDay - b.dueDay);
 }
 
@@ -52,9 +75,49 @@ export function newQuotaLeft(state: AppState, now = Date.now()): number {
   return Math.max(0, state.profile.newPerDay - learnedToday);
 }
 
-export function unseenWords(state: AppState, deckId?: string): Word[] {
-  const decks = deckId ? [deckId] : state.enrolledDecks;
-  return allWords(state).filter((w) => decks.includes(w.deckId) && !state.cards[w.id]);
+/**
+ * Seviye yolu sırası: önce seviye (A1 → C2); aynı seviyede konular sırayla harmanlanır
+ * (her desteden birer kelime), böylece bir günün yeni kelimeleri tek bir konuya yığılmaz.
+ */
+const DECK_PRIORITY = ['daily', 'core', 'food', 'home', 'travel', 'health', 'nature', 'emotions', 'tech', 'phrasal', 'business', 'sitcom', 'academic', 'advanced', 'personal'];
+const pathCache = new WeakMap<Word[], Word[]>();
+
+export function levelPathWords(state: AppState): Word[] {
+  let path = pathCache.get(state.customWords);
+  if (path) return path;
+  path = [];
+  const deckRank = (id: string) => {
+    const i = DECK_PRIORITY.indexOf(id);
+    return i < 0 ? DECK_PRIORITY.length : i;
+  };
+  for (const level of CEFR_LEVELS) {
+    const groups = new Map<string, Word[]>();
+    for (const w of allWords(state)) {
+      if (w.cefr !== level) continue;
+      const g = groups.get(w.deckId) ?? [];
+      g.push(w);
+      groups.set(w.deckId, g);
+    }
+    const decks = [...groups.keys()].sort((a, b) => deckRank(a) - deckRank(b));
+    const longest = Math.max(0, ...decks.map((d) => groups.get(d)!.length));
+    for (let i = 0; i < longest; i++) for (const d of decks) {
+      const w = groups.get(d)![i];
+      if (w) path.push(w);
+    }
+  }
+  pathCache.set(state.customWords, path);
+  return path;
+}
+
+/** Henüz kutuya girmemiş kelimeler, tanıtılma sırasıyla. */
+export function unseenWords(state: AppState, scope?: StudyScope): Word[] {
+  if (scope?.deckId) return allWords(state).filter((w) => w.deckId === scope.deckId && !state.cards[w.id]);
+  if (scope?.level) return levelPathWords(state).filter((w) => w.cefr === scope.level && !state.cards[w.id]);
+  if (state.profile.newWordOrder === 'level') {
+    const start = levelRank(state.profile.startLevel);
+    return levelPathWords(state).filter((w) => levelRank(w.cefr) >= start && !state.cards[w.id]);
+  }
+  return allWords(state).filter((w) => state.enrolledDecks.includes(w.deckId) && !state.cards[w.id]);
 }
 
 export interface DailyPlan {
@@ -65,16 +128,48 @@ export interface DailyPlan {
 }
 
 /** Günün çalışma planı: önce vadesi gelen tekrarlar, sonra yeni kelimeler. */
-export function dailyPlan(state: AppState, now = Date.now(), deckId?: string): DailyPlan {
+export function dailyPlan(state: AppState, now = Date.now(), scope?: StudyScope): DailyPlan {
   const goal = state.profile.dailyGoal;
-  const dueIds = dueCards(state, now, deckId).map((c) => c.wordId).slice(0, goal);
+  const dueIds = dueCards(state, now, scope).map((c) => c.wordId).slice(0, goal);
   const room = Math.max(0, goal - dueIds.length);
-  const quota = deckId ? Math.max(newQuotaLeft(state, now), Math.min(5, room)) : newQuotaLeft(state, now);
-  const newIds = unseenWords(state, deckId)
+  // Belirli bir deste/seviye çalışılırken günlük kota dolmuş olsa da birkaç yeni kelime gelir
+  const scoped = Boolean(scope?.deckId || scope?.level);
+  const quota = scoped ? Math.max(newQuotaLeft(state, now), Math.min(5, room)) : newQuotaLeft(state, now);
+  const newIds = unseenWords(state, scope)
     .slice(0, Math.min(room, quota))
     .map((w) => w.id);
   const total = dueIds.length + newIds.length;
   return { dueIds, newIds, total, minutes: Math.max(1, Math.ceil(total * 0.5)) };
+}
+
+export interface LevelProgress {
+  level: Cefr;
+  total: number;
+  /** Kutuya girmiş (çalışılmaya başlanmış) kelime */
+  started: number;
+  /** Kutu 4–5'teki kelime */
+  mastered: number;
+}
+
+export function levelProgress(state: AppState): LevelProgress[] {
+  const out = CEFR_LEVELS.map((level) => ({ level, total: 0, started: 0, mastered: 0 }));
+  for (const w of allWords(state)) {
+    const p = out[levelRank(w.cefr)];
+    p.total++;
+    const c = state.cards[w.id];
+    if (c) {
+      p.started++;
+      if (c.box >= 4) p.mastered++;
+    }
+  }
+  return out;
+}
+
+/** Seviye yolunda şu an ilerlenen seviye: başlangıç seviyesinden itibaren yeni kelimesi kalan ilk seviye. */
+export function currentLevel(state: AppState): Cefr {
+  const progress = levelProgress(state);
+  const start = levelRank(state.profile.startLevel);
+  return progress.find((p, i) => i >= start && p.started < p.total)?.level ?? 'C2';
 }
 
 export function leeches(state: AppState): CardState[] {

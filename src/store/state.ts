@@ -45,6 +45,8 @@ export function createInitialState(now = Date.now()): AppState {
       reminder: { enabled: false, hour: 20, minute: 0 },
       autoSpeak: false,
       autoBackup: true,
+      newWordOrder: 'level',
+      startLevel: 'A1',
     },
     cards: {},
     customWords: [],

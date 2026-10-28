@@ -9,9 +9,9 @@ import { checkAnswer, type AnswerVerdict } from '../lib/answer';
 import { useBackHandler } from '../lib/backButton';
 import { nextBox, previewInterval } from '../lib/leitner';
 import { speak, vibrate } from '../lib/speech';
-import type { CardState, ReviewOutcome, SessionMove } from '../lib/types';
+import type { CardState, Cefr, ReviewOutcome, SessionMove } from '../lib/types';
 import { useStore } from '../store/AppStore';
-import { dailyPlan, streak, unseenWords } from '../store/selectors';
+import { CEFR_LEVELS, dailyPlan, LEVEL_NAMES, streak, unseenWords, type StudyScope } from '../store/selectors';
 import { getDeck } from '../data/decks';
 
 const SESSION_BONUS_XP = 10;
@@ -30,6 +30,9 @@ export default function StudySession() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const deckId = params.get('deste') ?? undefined;
+  const levelParam = params.get('seviye') as Cefr | null;
+  const level = levelParam && CEFR_LEVELS.includes(levelParam) ? levelParam : undefined;
+  const scope: StudyScope | undefined = deckId || level ? { deckId, level } : undefined;
   const mode = params.get('mod'); // "hatalar" → yalnızca pratik, SRS'yi etkilemez
   const practiceOnly = mode === 'hatalar';
   // "ekstra=5" → günlük plan bitince günlük kotadan bağımsız ek yeni kelime turu
@@ -40,8 +43,8 @@ export default function StudySession() {
     if (practiceOnly) {
       return (state.lastSession?.moves ?? []).filter((m) => m.outcome === 'forgot').map((m) => m.wordId);
     }
-    if (extra) return unseenWords(state, deckId).slice(0, extra).map((w) => w.id);
-    const plan = dailyPlan(state, Date.now(), deckId);
+    if (extra) return unseenWords(state, scope).slice(0, extra).map((w) => w.id);
+    const plan = dailyPlan(state, Date.now(), scope);
     return [...plan.dueIds, ...plan.newIds];
   });
 
@@ -78,11 +81,11 @@ export default function StudySession() {
         durationMs,
         moves: moves.current,
         xp: xpEarned.current + SESSION_BONUS_XP,
-        source: extra ? 'extra' : deckId ? `deck:${deckId}` : 'daily',
+        source: extra ? 'extra' : deckId ? `deck:${deckId}` : level ? `level:${level}` : 'daily',
       },
     });
     navigate('/ogren/ozet', { replace: true });
-  }, [dispatch, navigate, practiceOnly, deckId, extra]);
+  }, [dispatch, navigate, practiceOnly, deckId, level, extra]);
 
   const rate = useCallback(
     (outcome: ReviewOutcome) => {
@@ -190,7 +193,7 @@ export default function StudySession() {
           }
           action={
             <div className="flex flex-col gap-2 w-full">
-              {!practiceOnly && <ExtraStudyButton deckId={deckId} replace />}
+              {!practiceOnly && <ExtraStudyButton scope={scope} replace />}
               <PrimaryButton onClick={() => navigate('/pratik')}>
                 <Icon name="psychology" size={20} /> Pratik Modüllerine Git
               </PrimaryButton>
@@ -245,6 +248,11 @@ export default function StudySession() {
         </div>
         <ProgressBar value={progress} className="mt-1" />
         {deck && <p className="font-label-sm text-label-sm text-on-surface-variant">{deck.emoji} {deck.title}</p>}
+        {level && (
+          <p className="font-label-sm text-label-sm text-on-surface-variant">
+            Seviye {level} • {LEVEL_NAMES[level]}
+          </p>
+        )}
       </div>
 
       <div className="flex items-center justify-between gap-3 px-3 py-2 my-1 rounded-xl bg-surface-container-low text-on-surface-variant">

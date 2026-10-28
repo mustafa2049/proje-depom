@@ -10,7 +10,7 @@ import { BOX_COLORS } from '../lib/leitner';
 import { rankedSearch, wordSearchIndex } from '../lib/text';
 import type { BoxNumber, CardState, Cefr, Word } from '../lib/types';
 import { useStore } from '../store/AppStore';
-import { allWords, cefrCounts, deckProgress } from '../store/selectors';
+import { allWords, cefrCounts, deckProgress, LEVEL_NAMES, levelProgress } from '../store/selectors';
 
 const CEFRS: Cefr[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 type SortMode = 'default' | 'progress' | 'size';
@@ -247,6 +247,34 @@ export default function Library() {
               </div>
             </div>
           </div>
+
+          <section className="flex flex-col gap-space-sm">
+            <div className="flex items-center justify-between">
+              <span className="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">Seviyeler</span>
+              <span className="font-label-sm text-label-sm text-on-surface-variant">A1 → C2</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {levelProgress(state).map((lp) => {
+                const pct = lp.total ? Math.round((lp.started / lp.total) * 100) : 0;
+                return (
+                  <Link
+                    key={lp.level}
+                    to={`/kutuphane/seviye/${lp.level}`}
+                    className="bg-surface-container rounded-xl p-3 flex flex-col gap-1.5 shadow-sm active:scale-[0.98] transition-transform"
+                  >
+                    <div className="flex items-baseline justify-between gap-1">
+                      <span className="font-headline-sm text-headline-sm text-on-surface font-bold">{lp.level}</span>
+                      <span className="font-label-sm text-label-sm text-on-surface-variant">{lp.total}</span>
+                    </div>
+                    <span className="font-label-sm text-label-sm text-on-surface-variant truncate">{LEVEL_NAMES[lp.level]}</span>
+                    <div className="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+                      <div className="h-full rounded-full bg-secondary" style={{ width: `${pct}%` }} />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
 
           <section className="flex flex-col gap-space-md">
             <div className="flex items-center justify-between">
