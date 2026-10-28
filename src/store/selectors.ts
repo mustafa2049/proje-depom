@@ -169,3 +169,54 @@ export function deckWordCount(state: AppState): Record<string, number> {
   for (const w of allWords(state)) counts[w.deckId] = (counts[w.deckId] ?? 0) + 1;
   return counts;
 }
+
+/** Yapay zekâ koçuna gönderilen, son 7 günün özet istatistikleri (düz metin). */
+export function coachStats(state: AppState, words: Record<string, Word>, posLabel: (pos: Word['pos']) => string, now = Date.now()): string {
+  const today = dayIndex(now);
+  const sumDays = (from: number, to: number) => {
+    let reviews = 0;
+    let correct = 0;
+    let ms = 0;
+    let days = 0;
+    for (let d = from; d <= to; d++) {
+      const h = state.history[dayKeyFromIndex(d)];
+      if (!h?.reviews) continue;
+      reviews += h.reviews;
+      correct += h.correct;
+      ms += h.studyMs;
+      days++;
+    }
+    return { reviews, correct, minutes: Math.round(ms / 60000), days };
+  };
+  const week = sumDays(today - 6, today);
+  const prev = sumDays(today - 13, today - 7);
+  const boxes = boxCounts(state);
+  const cards = Object.values(state.cards);
+  const forgotten = cards
+    .filter((c) => c.lapses > 0 && words[c.wordId])
+    .sort((a, b) => b.lapses - a.lapses || a.box - b.box)
+    .slice(0, 8)
+    .map((c) => `${words[c.wordId].word} (${posLabel(words[c.wordId].pos)}, ${c.lapses} kez unutuldu, şu an Kutu ${c.box})`);
+  const byPos = new Map<string, { reviews: number; correct: number }>();
+  for (const c of cards) {
+    const w = words[c.wordId];
+    if (!w || !c.reviews) continue;
+    const key = posLabel(w.pos);
+    const v = byPos.get(key) ?? { reviews: 0, correct: 0 };
+    byPos.set(key, { reviews: v.reviews + c.reviews, correct: v.correct + c.correct });
+  }
+  const posLine = [...byPos.entries()]
+    .filter(([, v]) => v.reviews >= 5)
+    .map(([k, v]) => `${k} %${Math.round((v.correct / v.reviews) * 100)} (${v.reviews} tekrar)`)
+    .join(', ');
+  const pct = (c: number, r: number) => (r ? `%${Math.round((c / r) * 100)}` : '—');
+  return [
+    `Son 7 gün: ${week.reviews} tekrar, doğruluk ${pct(week.correct, week.reviews)}, ${week.days}/7 gün çalıştı, toplam ${week.minutes} dk.`,
+    `Önceki 7 gün: ${prev.reviews} tekrar, doğruluk ${pct(prev.correct, prev.reviews)}, ${prev.days}/7 gün.`,
+    `Günlük hedef: ${state.profile.dailyGoal} kart. Seri: ${streak(state, now)} gün (en uzun ${longestStreak(state.history)}).`,
+    `Kutular: K1 ${boxes[1]}, K2 ${boxes[2]}, K3 ${boxes[3]}, K4 ${boxes[4]}, K5 ${boxes[5]} (toplam ${cards.length} kart). İnatçı kelime: ${leeches(state).length}.`,
+    `En çok unutulanlar: ${forgotten.join('; ') || 'yok'}.`,
+    `Türe göre doğruluk: ${posLine || 'yeterli veri yok'}.`,
+    `Son 7 günde yazılan günlük sayısı: ${state.journal.filter((j) => j.createdAt >= now - 7 * 86_400_000).length}.`,
+  ].join('\n');
+}

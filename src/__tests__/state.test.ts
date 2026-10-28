@@ -3,7 +3,7 @@ import { SEED_WORDS } from '../data/words';
 import { DECKS } from '../data/decks';
 import { splitByTerm } from '../lib/text';
 import { dayIndex, dayKey } from '../lib/leitner';
-import { allWords, boxCounts, dailyPlan, leeches, wordMap } from '../store/selectors';
+import { allWords, boxCounts, coachStats, dailyPlan, leeches, wordMap } from '../store/selectors';
 import { createInitialState, migrate, reducer } from '../store/state';
 
 const now = new Date(2026, 9, 27, 10, 0).getTime();
@@ -99,5 +99,24 @@ describe('günlük plan', () => {
     s = reducer(s, { type: 'review', wordId: 'a1', outcome: 'easy', now });
     s = reducer(s, { type: 'review', wordId: 'thrive', outcome: 'forgot', now });
     expect(boxCounts(s)).toEqual({ 1: 1, 2: 0, 3: 0, 4: 0, 5: 1 });
+  });
+});
+
+describe('yapay zekâ koçu', () => {
+  it('istatistik özeti son 7 günü, kutuları ve en çok unutulanları içerir', () => {
+    let s = createInitialState(now);
+    for (const outcome of ['forgot', 'forgot', 'know'] as const) s = reducer(s, { type: 'review', wordId: 'inevitable', outcome, now });
+    s = reducer(s, { type: 'review', wordId: 'thrive', outcome: 'easy', now });
+    const text = coachStats(s, wordMap(s), (pos) => pos, now);
+    expect(text).toContain('Son 7 gün: 4 tekrar, doğruluk %50, 1/7 gün');
+    expect(text).toContain('inevitable (adjective, 2 kez unutuldu, şu an Kutu 2)');
+    expect(text).toContain('K5 1');
+  });
+  it('rapor kaydedilir ve eski yedeklerde boş başlar', () => {
+    const report = { headline: 'h', summary: 's', strengths: [], focus: [], plan: [], createdAt: now };
+    expect(reducer(createInitialState(now), { type: 'setCoachReport', report }).coachReport).toEqual(report);
+    const old = { ...createInitialState(now) } as Partial<ReturnType<typeof createInitialState>>;
+    delete old.coachReport;
+    expect(migrate(old).coachReport).toBeNull();
   });
 });

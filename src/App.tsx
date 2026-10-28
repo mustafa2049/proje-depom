@@ -11,6 +11,8 @@ import { dailyPlan, streak } from './store/selectors';
 
 const StudySession = lazy(() => import('./pages/StudySession'));
 const SessionSummary = lazy(() => import('./pages/SessionSummary'));
+const Conversation = lazy(() => import('./pages/practice/Conversation'));
+const AiCloze = lazy(() => import('./pages/practice/AiCloze'));
 const Practice = lazy(() => import('./pages/Practice'));
 const Library = lazy(() => import('./pages/Library'));
 const AddWord = lazy(() => import('./pages/AddWord'));
@@ -77,6 +79,8 @@ export default function App() {
               <Route path="/ogren/ozet" element={<SessionSummary />} />
               <Route path="/pratik" element={<Practice />} />
               <Route path="/pratik/quiz" element={<Quiz />} />
+              <Route path="/pratik/sohbet" element={<Conversation />} />
+              <Route path="/pratik/ai-bosluk" element={<AiCloze />} />
               <Route path="/pratik/karistirilan" element={<Confusables />} />
               <Route path="/pratik/sesli" element={<HandsFree />} />
               <Route path="/pratik/telaffuz" element={<Pronunciation />} />

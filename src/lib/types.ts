@@ -123,6 +123,16 @@ export interface StoryData {
   aiGenerated?: boolean;
 }
 
+/** Yapay zekâ koçunun haftalık raporu */
+export interface CoachReport {
+  headline: string;
+  summary: string;
+  strengths: string[];
+  focus: string[];
+  plan: string[];
+  createdAt: number;
+}
+
 export interface AppState {
   version: 1;
   profile: Profile;
@@ -137,6 +147,8 @@ export interface AppState {
   rescuedLeeches: number;
   /** Yapay zekânın kullanıcının kelimeleriyle ürettiği hikayeler (en yeni başta) */
   aiStories: StoryData[];
+  /** Son yapay zekâ koçu raporu */
+  coachReport: CoachReport | null;
 }
 
 export interface Deck {

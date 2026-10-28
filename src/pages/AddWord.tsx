@@ -6,7 +6,7 @@ import { cx, Icon, SpeakButton } from '../components/ui';
 import { DECKS, PERSONAL_DECK_ID } from '../data/decks';
 import { POS_LABELS, slugify } from '../data/words';
 import { aiAvailable } from '../lib/ai';
-import { aiWordInfo } from '../lib/aiTasks';
+import { aiExtractVocab, aiWordInfo } from '../lib/aiTasks';
 import { lookupOnline } from '../lib/dictionary';
 import { BOX_COLORS, BOX_LABELS } from '../lib/leitner';
 import { vibrate } from '../lib/speech';
@@ -14,8 +14,9 @@ import { cleanSubtitles, extractVocabulary, findWordId, tokenize } from '../lib/
 import type { BoxNumber, Cefr, PartOfSpeech, Word } from '../lib/types';
 import { useStore } from '../store/AppStore';
 import { deckWordCount } from '../store/selectors';
+import { useAddToBox } from '../store/useAddToBox';
 
-type Mode = 'manual' | 'ocr' | 'subtitle';
+type Mode = 'manual' | 'ocr' | 'subtitle' | 'text';
 
 interface FormState {
   word: string;
@@ -150,9 +151,10 @@ export default function AddWord() {
       <section className="bg-surface-container-low p-1.5 rounded-2xl flex items-center justify-between shadow-sm gap-1">
         {(
           [
-            ['manual', 'auto_awesome', 'Manuel & Otomatik'],
-            ['ocr', 'document_scanner', 'Kamera (OCR)'],
-            ['subtitle', 'subtitles', 'Altyazı Analiz'],
+            ['manual', 'edit', 'Manuel'],
+            ['ocr', 'document_scanner', 'Kamera'],
+            ['subtitle', 'subtitles', 'Altyazı'],
+            ...(aiAvailable() ? ([['text', 'auto_awesome', 'Metin (AI)']] as const) : []),
           ] as const
         ).map(([m, icon, label]) => (
           <button
@@ -172,6 +174,7 @@ export default function AddWord() {
 
       {mode === 'ocr' && <OcrPanel onPick={pickWord} />}
       {mode === 'subtitle' && <SubtitlePanel onPick={pickWord} />}
+      {mode === 'text' && <TextDeckPanel />}
 
       {mode === 'manual' && (
         <>
@@ -589,6 +592,167 @@ function SubtitlePanel({ onPick }: { onPick: (w: string) => void }) {
             })}
           </div>
           <p className="font-label-sm text-label-sm text-on-surface-variant">Sık kullanılan temel kelimeler filtrelendi. Yeşil olanlar zaten kutularında.</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/** Yapıştırılan metinden yapay zekâyla öğrenmeye değer kelimeleri çıkarıp toplu ekleme. */
+function TextDeckPanel() {
+  const { state, words } = useStore();
+  const toast = useToast();
+  const addToBox = useAddToBox();
+  const [text, setText] = useState('');
+  const [level, setLevel] = useState<Cefr>('B1');
+  const [deckId, setDeckId] = useState(PERSONAL_DECK_ID);
+  const [items, setItems] = useState<Word[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const extract = async () => {
+    setLoading(true);
+    try {
+      const known = Object.keys(state.cards).map((id) => words[id]?.word).filter((w): w is string => !!w);
+      const found = (await aiExtractVocab(text, level, deckId, known)).filter((w, i, all) => all.findIndex((x) => x.id === w.id) === i);
+      // Sözlükte zaten olan kelimeler için hazır (doğrulanmış) kart kullanılır
+      const merged = found.map((w) => words[w.id] ?? w);
+      setItems(merged);
+      setSelected(merged.filter((w) => !state.cards[w.id]).map((w) => w.id));
+      if (!merged.length) toast('Öğrenmeye değer kelime bulunamadı', { tone: 'info', icon: 'search_off' });
+    } catch (e) {
+      toast('Kelimeler çıkarılamadı', { description: (e as Error).message, tone: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addSelected = () => {
+    const added = items.filter((w) => selected.includes(w.id)).filter((w) => addToBox(w, true)).length;
+    vibrate(50);
+    toast(`${added} kelime Kutu 1’e eklendi`, { description: 'Bugünkü çalışmanda karşına çıkacaklar.', icon: 'library_add' });
+    setSelected([]);
+  };
+
+  return (
+    <section className="bg-surface-container rounded-2xl p-5 shadow-lg flex flex-col gap-4">
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 rounded-lg bg-primary-container/20 flex items-center justify-center text-primary">
+          <Icon name="auto_awesome" size={20} />
+        </div>
+        <div>
+          <h2 className="font-headline-sm text-headline-sm text-on-surface">Metinden Deste Oluştur</h2>
+          <p className="font-label-md text-label-md text-on-surface-variant">Haber, şarkı sözü, e-posta… yapıştır, yapay zekâ seçsin</p>
+        </div>
+      </div>
+      <textarea
+        aria-label="İngilizce metin"
+        lang="en"
+        rows={6}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Paste any English text here…"
+        className="p-3 rounded-xl bg-surface-container-lowest text-on-surface font-body-sm text-body-sm outline-none focus:ring-1 focus:ring-primary resize-y placeholder:text-outline"
+      />
+      <div className="grid grid-cols-2 gap-2">
+        <label className="flex flex-col gap-1">
+          <span className="font-label-sm text-label-sm text-on-surface-variant">Seviyem</span>
+          <select
+            value={level}
+            onChange={(e) => setLevel(e.target.value as Cefr)}
+            className="bg-surface-container-low text-on-surface py-2.5 px-3 rounded-xl font-body-sm text-body-sm outline-none"
+          >
+            {(['A2', 'B1', 'B2', 'C1'] as Cefr[]).map((l) => (
+              <option key={l} value={l}>
+                {l}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="font-label-sm text-label-sm text-on-surface-variant">Deste</span>
+          <select
+            value={deckId}
+            onChange={(e) => setDeckId(e.target.value)}
+            className="bg-surface-container-low text-on-surface py-2.5 px-3 rounded-xl font-body-sm text-body-sm outline-none"
+          >
+            {DECKS.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.emoji} {d.title}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <button
+        type="button"
+        onClick={extract}
+        disabled={loading || text.trim().split(/\s+/).length < 8}
+        className="h-12 rounded-xl bg-primary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 disabled:opacity-40"
+      >
+        <Icon name={loading ? 'progress_activity' : 'auto_awesome'} size={20} className={loading ? 'animate-spin' : ''} />
+        {loading ? 'Kelimeler seçiliyor…' : 'Kelimeleri Çıkar'}
+      </button>
+
+      {items.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">{items.length} kelime bulundu</span>
+            <button
+              type="button"
+              onClick={() => setSelected(selected.length ? [] : items.filter((w) => !state.cards[w.id]).map((w) => w.id))}
+              className="font-label-md text-label-md text-primary"
+            >
+              {selected.length ? 'Seçimi kaldır' : 'Tümünü seç'}
+            </button>
+          </div>
+          {items.map((w) => {
+            const inBox = state.cards[w.id];
+            const on = selected.includes(w.id);
+            return (
+              <button
+                key={w.id}
+                type="button"
+                disabled={!!inBox}
+                onClick={() => setSelected((s) => (on ? s.filter((x) => x !== w.id) : [...s, w.id]))}
+                className={cx(
+                  'text-left p-3 rounded-xl flex items-start gap-3 transition-colors',
+                  inBox ? 'bg-surface-container-low opacity-60' : on ? 'bg-primary-container/20 ring-1 ring-primary/50' : 'bg-surface-container-low',
+                )}
+              >
+                <Icon
+                  name={inBox ? 'inventory_2' : on ? 'check_box' : 'check_box_outline_blank'}
+                  size={20}
+                  fill={on}
+                  className={cx('mt-0.5', inBox ? 'text-secondary' : on ? 'text-primary' : 'text-outline')}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span lang="en" className="font-label-lg text-label-lg text-on-surface">{w.word}</span>
+                    <span className="font-label-sm text-label-sm text-on-surface-variant">
+                      {POS_LABELS[w.pos].tr} • {w.cefr}
+                    </span>
+                    {words[w.id] && !w.custom && <span className="font-label-sm text-label-sm text-secondary">sözlükte var</span>}
+                    {inBox && <span className="font-label-sm text-label-sm text-secondary">Kutu {inBox.box}’te</span>}
+                  </div>
+                  <p className="font-body-sm text-body-sm text-on-surface">{w.meaning}</p>
+                  {w.examples[0] && (
+                    <p lang="en" className="font-body-sm text-body-sm text-on-surface-variant italic truncate">
+                      {w.examples[0].en}
+                    </p>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={addSelected}
+            disabled={!selected.length}
+            className="h-12 rounded-xl bg-secondary text-on-secondary font-label-lg text-label-lg flex items-center justify-center gap-2 disabled:opacity-40"
+          >
+            <Icon name="library_add" size={20} /> {selected.length} kelimeyi kutuya ekle
+          </button>
         </div>
       )}
     </section>

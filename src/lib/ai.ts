@@ -43,6 +43,25 @@ export function aiAvailable(): boolean {
 
 export class AiError extends Error {}
 
+/** Ücretsiz katmanın dakikalık token sınırı aşıldı; retryAfter saniye sonra yeniden denenebilir. */
+class RateLimitError extends AiError {
+  constructor(readonly retryAfter: number) {
+    super('Ücretsiz kullanım sınırına ulaşıldı. Biraz sonra tekrar dene.');
+  }
+}
+
+/** Model geçerli JSON üretemedi; aynı istek yeniden denenebilir. */
+class BadOutputError extends AiError {}
+
+// Groq'ta her modelin dakikalık token sınırı ayrıdır: biri dolarsa diğerine geçilir.
+const FALLBACK_MODEL: Record<string, string> = {
+  [CHAT_MODEL]: 'openai/gpt-oss-20b',
+  [CREATIVE_MODEL]: CHAT_MODEL,
+  'openai/gpt-oss-20b': CHAT_MODEL,
+};
+
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 async function post(path: string, body: BodyInit, json: boolean, timeoutMs: number): Promise<unknown> {
   const key = apiKey();
   if (!key) throw new AiError('Yapay zekâ anahtarı tanımlı değil.');
@@ -56,7 +75,8 @@ async function post(path: string, body: BodyInit, json: boolean, timeoutMs: numb
       signal: ctrl.signal,
     });
     if (res.status === 401) throw new AiError('API anahtarı geçersiz. Ayarlardan yeni anahtar gir.');
-    if (res.status === 429) throw new AiError('Ücretsiz kullanım sınırına ulaşıldı. Biraz sonra tekrar dene.');
+    if (res.status === 429) throw new RateLimitError(Number(res.headers.get('retry-after')) || 10);
+    if (res.status === 400 && (await res.text()).includes('json_validate_failed')) throw new BadOutputError('Yapay zekâ yanıtı okunamadı.');
     if (!res.ok) throw new AiError(`Yapay zekâ servisi yanıt vermedi (HTTP ${res.status}).`);
     return await res.json();
   } catch (e) {
@@ -67,8 +87,7 @@ async function post(path: string, body: BodyInit, json: boolean, timeoutMs: numb
   }
 }
 
-/** Modelden JSON nesnesi ister ve ayrıştırır. */
-export async function chatJson<T>(system: string, user: string, maxTokens = 1500, model = CHAT_MODEL): Promise<T> {
+async function chatJsonOnce<T>(system: string, user: string, maxTokens: number, model: string): Promise<T> {
   const data = (await post(
     '/chat/completions',
     JSON.stringify({
@@ -87,12 +106,36 @@ export async function chatJson<T>(system: string, user: string, maxTokens = 1500
     45_000,
   )) as { choices?: { message?: { content?: string } }[] };
   const text = data.choices?.[0]?.message?.content;
-  if (!text) throw new AiError('Yapay zekâ boş yanıt verdi.');
+  if (!text) throw new BadOutputError('Yapay zekâ boş yanıt verdi.');
   try {
     return JSON.parse(text) as T;
   } catch {
-    throw new AiError('Yapay zekâ yanıtı okunamadı.');
+    throw new BadOutputError('Yapay zekâ yanıtı okunamadı.');
   }
+}
+
+/**
+ * Modelden JSON nesnesi ister ve ayrıştırır. Sınır dolarsa yedek modele geçer,
+ * o da doluysa kısa bir bekleme sonrası bir kez daha dener; bozuk çıktıda bir kez yeniler.
+ */
+export async function chatJson<T>(system: string, user: string, maxTokens = 1500, model = CHAT_MODEL): Promise<T> {
+  const fallback = FALLBACK_MODEL[model];
+  let badOutput = false;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const m = attempt % 2 === 1 && fallback ? fallback : model;
+    try {
+      return await chatJsonOnce<T>(system, user, maxTokens, m);
+    } catch (e) {
+      if (e instanceof BadOutputError && !badOutput) {
+        badOutput = true;
+        continue;
+      }
+      if (!(e instanceof RateLimitError) || attempt === 3) throw e;
+      // İlk sınır hatasında hemen yedek modele geç; o da doluysa beklenen süre kadar bekle (en fazla 12 sn).
+      if (attempt >= 1) await wait(Math.min(12, e.retryAfter) * 1000);
+    }
+  }
+  throw new AiError('Yapay zekâ şu an yanıt veremiyor.');
 }
 
 /** Ses kaydını (Whisper) yazıya çevirir. */

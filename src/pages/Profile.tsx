@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { SubScreen } from '../components/Layout';
+import { AiCoach } from '../components/AiCoach';
 import { AiSettings } from '../components/AiSettings';
 import { Sheet } from '../components/Sheet';
 import { StudySettings } from '../components/StudySettings';
@@ -127,6 +128,8 @@ export default function Profile() {
           </div>
         </div>
       </section>
+
+      <AiCoach />
 
       <section className="bg-surface-container rounded-xl p-space-lg shadow-md flex flex-col gap-space-md">
         <div className="flex flex-col">

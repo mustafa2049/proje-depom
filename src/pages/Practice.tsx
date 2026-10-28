@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { TabScreen } from '../components/Layout';
 import { cx, Icon } from '../components/ui';
 import { useStore } from '../store/AppStore';
+import { aiAvailable } from '../lib/ai';
 import { leeches } from '../store/selectors';
 
 interface ModuleItem {
@@ -12,6 +13,15 @@ interface ModuleItem {
   color: string;
   bg: string;
 }
+
+const AI_GROUP = {
+  title: 'Yapay Zekâ',
+  icon: 'auto_awesome',
+  items: [
+    { to: '/pratik/sohbet', icon: 'forum', title: 'Sohbet Partneri', text: 'Senaryolu sesli İngilizce konuşma', color: 'text-secondary', bg: 'bg-secondary/15' },
+    { to: '/pratik/ai-bosluk', icon: 'auto_awesome', title: 'Akıllı Boşluk Doldurma', text: 'Kelimelerin için her seferinde yeni cümleler', color: 'text-tertiary', bg: 'bg-tertiary/15' },
+  ],
+};
 
 const GROUPS: { title: string; icon: string; items: ModuleItem[] }[] = [
   {
@@ -55,6 +65,8 @@ const GROUPS: { title: string; icon: string; items: ModuleItem[] }[] = [
 export default function Practice() {
   const { state } = useStore();
   const leechCount = leeches(state).length;
+  const groups = aiAvailable() ? [AI_GROUP, ...GROUPS] : GROUPS;
+  const moduleCount = groups.reduce((n, g) => n + g.items.length, 0);
 
   return (
     <TabScreen subtitle="Pratik">
@@ -62,7 +74,7 @@ export default function Practice() {
         <div className="flex items-center justify-between gap-3 relative z-10">
           <div className="flex flex-col min-w-0">
             <span className="font-label-sm text-label-sm text-primary uppercase tracking-wider">Pratik Merkezi</span>
-            <span className="font-headline-md text-headline-md text-on-surface font-bold">12 Öğrenme Modülü</span>
+            <span className="font-headline-md text-headline-md text-on-surface font-bold">{moduleCount} Öğrenme Modülü</span>
             <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
               Kelimeleri farklı bağlamlarda kullanarak kalıcı hafızaya taşı.
             </p>
@@ -74,7 +86,7 @@ export default function Practice() {
         <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-primary/10 rounded-full blur-xl pointer-events-none" />
       </section>
 
-      {GROUPS.map((g) => (
+      {groups.map((g) => (
         <section key={g.title} className="flex flex-col gap-space-sm">
           <div className="flex items-center gap-1.5 px-0.5">
             <Icon name={g.icon} size={18} className="text-primary" />

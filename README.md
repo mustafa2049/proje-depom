@@ -64,7 +64,7 @@ Yönlendirme `#/` tabanlı olduğu için ek sunucu ayarı gerekmez.
 | --- | --- |
 | Ana Sayfa | Günlük plan, Leitner dağılımı, hızlı modüller, inatçı kelime uyarısı |
 | Öğren | Kart oturumu (dokun-çevir, kaydır, klavye: Boşluk / ← / ↑ / →), oturum özeti, aktif desteler |
-| Pratik | 12 modül (aşağıda) |
+| Pratik | 12 modül + 2 yapay zekâ modülü (aşağıda) |
 | Kütüphane | 14 deste, 1000+ kelime, arama, CEFR filtresi, hızlı kelime ekleme |
 | Kendi Kelimeni Ekle | Otomatik doldurma, kamera ile metin tarama (OCR), altyazı (.srt/.vtt) analizi |
 | Profil | İstatistikler, haftalık harita, başarımlar, ayarlar, JSON yedek / Anki dışa aktarma |
@@ -85,6 +85,21 @@ depoya **gönderilmez**:
 ```bash
 cp .env.example .env.local   # sonra VITE_GROQ_API_KEY=gsk_... satırını doldurun
 ```
+
+Yapay zekâ özellikleri (anahtar ve internet varsa görünür):
+
+| Özellik | Nerede |
+| --- | --- |
+| **Sohbet Partneri** — 9 senaryoda (kafe, havalimanı, iş görüşmesi…) sesli/yazılı İngilizce konuşma; anlık düzeltme, cevap önerileri, Türkçe çeviri, sonunda karne | Pratik → Yapay Zekâ |
+| **Akıllı Boşluk Doldurma** — çalıştığın 8 kelime için her seferinde yeni cümlelerle çoktan seçmeli test | Pratik → Yapay Zekâ |
+| **Neden yanlış?** — yazarak cevapta hatanı ve karıştırdığın kelimeyi açıklar | Kart oturumu (yanlış cevap sonrası) |
+| **Yeni örnek cümleler** — farklı bağlamlarda cümleler; beğendiğini karta kaydet | Kart arka yüzü, kelime detayı |
+| **Kendi cümleni kur** — cümleni puanlar, düzeltir, daha doğal halini önerir | Kart arka yüzü, kelime detayı |
+| **Yapay Zekâ Koçu** — son 7 günün istatistiklerinden kişisel haftalık rapor ve plan | Profil |
+| **Metinden deste** — yapıştırılan metinden seviyene uygun kelimeleri seçip toplu ekler | Kelime Ekle → Metin (AI) |
+
+Ücretsiz katmanda her modelin dakikalık token sınırı vardır; sınır dolarsa istek otomatik olarak yedek modele
+(`gpt-oss-120b` ↔ `gpt-oss-20b`) aktarılır, gerekirse birkaç saniye beklenip yeniden denenir.
 
 Anahtar uygulama içinden de değiştirilebilir: Profil → Ayarlar → Yapay Zekâ (Groq).
 Gömülü anahtar APK'dan okunabilir; bu yüzden APK yalnızca kişisel kullanım içindir, paylaşılmamalıdır.

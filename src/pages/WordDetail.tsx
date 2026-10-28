@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { AiCardTools, type AiCardTab } from '../components/AiCardTools';
 import { SubScreen } from '../components/Layout';
 import { useToast } from '../components/Toast';
 import { BoxStrip, cx, EmptyState, Highlight, Icon, SpeakButton } from '../components/ui';
 import { getDeck } from '../data/decks';
 import { POS_LABELS } from '../data/words';
+import { aiAvailable } from '../lib/ai';
 import { BOX_COLORS, dueLabel, nextBox, previewInterval } from '../lib/leitner';
 import type { ReviewOutcome } from '../lib/types';
 import { useStore } from '../store/AppStore';
@@ -18,6 +20,7 @@ export default function WordDetail() {
   const card = state.cards[id];
   const [editingMnemonic, setEditingMnemonic] = useState(false);
   const [mnemonic, setMnemonic] = useState(word?.mnemonic ?? '');
+  const [aiTab, setAiTab] = useState<AiCardTab | null>(null);
 
   if (!word) {
     return (
@@ -167,6 +170,31 @@ export default function WordDetail() {
           </div>
         )}
       </section>
+
+      {aiAvailable() && (
+        <section className="bg-surface-container rounded-xl p-3 flex flex-col gap-2.5">
+          <span className="font-label-lg text-label-lg text-on-surface flex items-center gap-1.5">
+            <Icon name="auto_awesome" size={18} className="text-tertiary" /> Yapay Zekâ ile Çalış
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setAiTab('examples')}
+              className="py-2.5 px-2 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-md text-label-md flex items-center justify-center gap-1.5"
+            >
+              <Icon name="format_quote" size={16} className="text-primary" /> Yeni örnek cümleler
+            </button>
+            <button
+              type="button"
+              onClick={() => setAiTab('sentence')}
+              className="py-2.5 px-2 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-md text-label-md flex items-center justify-center gap-1.5"
+            >
+              <Icon name="edit_note" size={16} className="text-secondary" /> Kendi cümleni kur
+            </button>
+          </div>
+          <AiCardTools word={word} open={aiTab !== null} onClose={() => setAiTab(null)} tab={aiTab ?? 'examples'} />
+        </section>
+      )}
 
       <div className="w-full flex flex-col gap-2 pt-1">
         <span className="font-label-sm text-label-sm text-center text-on-surface-variant uppercase tracking-wider font-semibold">Performans Değerlendirmeni Seç</span>

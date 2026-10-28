@@ -10,6 +10,7 @@ import {
 import type {
   AppState,
   BoxNumber,
+  CoachReport,
   DayStat,
   JournalEntry,
   Profile,
@@ -52,6 +53,7 @@ export function createInitialState(now = Date.now()): AppState {
     bookmarks: [],
     rescuedLeeches: 0,
     aiStories: [],
+    coachReport: null,
   };
 }
 
@@ -74,6 +76,7 @@ export type Action =
   | { type: 'toggleBookmark'; id: string }
   | { type: 'addAiStory'; story: StoryData }
   | { type: 'deleteAiStory'; id: string }
+  | { type: 'setCoachReport'; report: CoachReport }
   | { type: 'import'; state: AppState }
   | { type: 'reset' };
 
@@ -214,6 +217,8 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, aiStories: [action.story, ...state.aiStories].slice(0, 10) };
     case 'deleteAiStory':
       return { ...state, aiStories: state.aiStories.filter((s) => s.id !== action.id) };
+    case 'setCoachReport':
+      return { ...state, coachReport: action.report };
     case 'import':
       return migrate(action.state);
     case 'reset':
@@ -242,6 +247,7 @@ export function migrate(raw: unknown): AppState {
     bookmarks: Array.isArray(s.bookmarks) ? s.bookmarks : [],
     rescuedLeeches: s.rescuedLeeches ?? 0,
     aiStories: Array.isArray(s.aiStories) ? s.aiStories : [],
+    coachReport: s.coachReport ?? null,
   };
 }
 

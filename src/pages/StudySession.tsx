@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { AiCardTools, type AiCardTab } from '../components/AiCardTools';
 import { Flashcard, type SwipeDirection } from '../components/Flashcard';
 import { EmptyState, cx, Icon, PrimaryButton, ProgressBar, BoxStrip } from '../components/ui';
+import { aiAvailable } from '../lib/ai';
 import { checkAnswer, type AnswerVerdict } from '../lib/answer';
 import { nextBox, previewInterval } from '../lib/leitner';
 import { vibrate } from '../lib/speech';
@@ -34,6 +36,7 @@ export default function StudySession() {
   const [typed, setTyped] = useState('');
   const [verdict, setVerdict] = useState<AnswerVerdict | null>(null);
   const [exiting, setExiting] = useState<SwipeDirection | null>(null);
+  const [aiTab, setAiTab] = useState<AiCardTab | null>(null);
   const moves = useRef<SessionMove[]>([]);
   const startedAt = useRef(Date.now());
   const xpEarned = useRef(0);
@@ -80,6 +83,7 @@ export default function StudySession() {
         setFlipped(false);
         setTyped('');
         setVerdict(null);
+        setAiTab(null);
         if (index + 1 >= queue.length) finish();
         else setIndex((i) => i + 1);
       }, 280);
@@ -89,7 +93,7 @@ export default function StudySession() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (aiTab || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === ' ') {
         e.preventDefault();
         setFlipped((f) => !f);
@@ -99,13 +103,14 @@ export default function StudySession() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [rate]);
+  }, [rate, aiTab]);
 
   const knowTarget = useMemo(() => nextBox(card?.box ?? 0, 'know'), [card]);
   // Kart yönü: karışık modda kartların yarısı ters sorulur (oturum boyunca sabit)
   const direction = state.profile.cardDirection;
   const reverse = direction === 'tr-en' || (direction === 'mixed' && (index * 7 + (wordId?.length ?? 0)) % 2 === 1);
   const typeMode = state.profile.typeAnswer;
+  const ai = aiAvailable();
   const submitTyped = () => {
     if (!word || !typed.trim()) return;
     const v = checkAnswer(typed, word, reverse);
@@ -215,24 +220,62 @@ export default function StudySession() {
             Kontrol
           </button>
         </form>
-      ) : verdict ? (
-        <div
-          className={cx(
-            'flex items-center gap-2 px-3 py-2 rounded-xl font-label-md text-label-md',
-            verdict === 'correct' ? 'bg-secondary-container/30 text-secondary' : verdict === 'close' ? 'bg-tertiary-container/30 text-tertiary' : 'bg-error-container/30 text-error',
-          )}
-        >
-          <Icon name={verdict === 'correct' ? 'check_circle' : verdict === 'close' ? 'spellcheck' : 'cancel'} size={18} />
-          <span>
-            {verdict === 'correct' ? 'Doğru! “Biliyorum”a bas.' : verdict === 'close' ? `Neredeyse — küçük bir yazım hatası. Senin cevabın: “${typed}”` : `Yanlış. Senin cevabın: “${typed}”`}
-          </span>
-        </div>
       ) : (
-        <div className="flex items-center justify-center gap-2 py-1 text-outline font-label-sm text-label-sm">
-          <Icon name="swipe" size={16} />
-          <span>Sağa/sola kaydırın veya aşağıdaki butonları kullanın</span>
+        <div className="flex flex-col gap-2 py-1">
+          {verdict && (
+            <div
+              className={cx(
+                'flex items-center gap-2 px-3 py-2 rounded-xl font-label-md text-label-md',
+                verdict === 'correct' ? 'bg-secondary-container/30 text-secondary' : verdict === 'close' ? 'bg-tertiary-container/30 text-tertiary' : 'bg-error-container/30 text-error',
+              )}
+            >
+              <Icon name={verdict === 'correct' ? 'check_circle' : verdict === 'close' ? 'spellcheck' : 'cancel'} size={18} />
+              <span className="flex-1">
+                {verdict === 'correct' ? 'Doğru! “Biliyorum”a bas.' : verdict === 'close' ? `Neredeyse — küçük bir yazım hatası. Senin cevabın: “${typed}”` : `Yanlış. Senin cevabın: “${typed}”`}
+              </span>
+              {verdict !== 'correct' && ai && (
+                <button type="button" onClick={() => setAiTab('why')} className="shrink-0 px-2.5 py-1 rounded-lg bg-surface-container-high text-on-surface flex items-center gap-1">
+                  <Icon name="help" size={16} className="text-tertiary" /> Neden?
+                </button>
+              )}
+            </div>
+          )}
+          {flipped && ai ? (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setAiTab('examples')}
+                className="flex-1 h-10 rounded-xl bg-surface-container-high text-on-surface font-label-md text-label-md flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+              >
+                <Icon name="auto_awesome" size={16} className="text-tertiary" /> Yeni örnek
+              </button>
+              <button
+                type="button"
+                onClick={() => setAiTab('sentence')}
+                className="flex-1 h-10 rounded-xl bg-surface-container-high text-on-surface font-label-md text-label-md flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+              >
+                <Icon name="edit_note" size={16} className="text-primary" /> Cümle kur
+              </button>
+            </div>
+          ) : (
+            !verdict && (
+              <div className="flex items-center justify-center gap-2 text-outline font-label-sm text-label-sm">
+                <Icon name="swipe" size={16} />
+                <span>Sağa/sola kaydırın veya aşağıdaki butonları kullanın</span>
+              </div>
+            )
+          )}
         </div>
       )}
+
+      <AiCardTools
+        word={word}
+        open={aiTab !== null}
+        onClose={() => setAiTab(null)}
+        tab={aiTab ?? 'examples'}
+        mistake={verdict && verdict !== 'correct' ? { answer: typed, reverse } : undefined}
+        key={word.id}
+      />
 
       <div className="grid grid-cols-3 gap-2.5 pt-2 pb-3 mt-auto">
         <button
